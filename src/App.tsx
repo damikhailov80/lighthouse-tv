@@ -7,30 +7,18 @@ import { Dashboard } from "./components/Dashboard";
 import { ActivityDetail } from "./components/ActivityDetail";
 import { EditActivityDialog, type ActivityDraft } from "./components/EditActivityDialog";
 import { useSpatialNavigation } from "./hooks/useSpatialNavigation";
+import { DASHBOARD, activityIdOf, depthOf, hashFor, parseHash, type Route } from "./domain/route";
 
 // What the edit dialog is currently working on: an existing activity,
 // a new one ("new"), or nothing (dialog closed).
 type EditTarget = Activity | "new" | null;
 
-// Navigation depth pushed into history: the dashboard is 0, an open activity
-// page is 1, the edit dialog on top of it is 2. The remote's BACK button walks
-// this stack natively (MainActivity forwards it to WebView.goBack()).
-const DEPTH_DASHBOARD = 0;
-const DEPTH_DETAIL = 1;
-const DEPTH_DIALOG = 2;
-
-// URLs are hashes: the app is served from file:// inside the Android WebView,
-// where pushing a path would throw. They are cosmetic — the history state's
-// depth, not the hash, is what drives the UI.
-const hashForDashboard = () => "#/";
-const hashForDetail = (id: string) => `#/activity/${id}`;
-const hashForEdit = (target: Activity | "new") =>
-  target === "new" ? "#/activity/new" : `#/activity/${target.id}/edit`;
-
 export function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editTarget, setEditTarget] = useState<EditTarget>(null);
+  // The URL drives the UI, so a hash typed into the address bar opens the same
+  // screen the in-app navigation would.
+  const [route, setRoute] = useState<Route>(() => parseHash(location.hash));
+  const [loaded, setLoaded] = useState(false);
   const didInitialFocus = useRef(false);
   // Card to restore focus to when coming back from an activity page.
   const lastOpenedId = useRef<string | null>(null);
@@ -40,10 +28,38 @@ export function App() {
   useEffect(() => {
     const stored = loadActivities();
     setActivities(stored.length > 0 ? stored : seedActivities());
-    // A reload can leave a deep-link hash with no history behind it, which
-    // would make BACK quit the app. Start every session on the dashboard.
-    history.replaceState({ depth: DEPTH_DASHBOARD }, "", hashForDashboard());
+    setLoaded(true);
+
+    // A deep link arrives as a single history entry, so BACK would leave the
+    // app. Rebuild the stack underneath it: dashboard, then the activity page,
+    // then the dialog — exactly what opening it by hand would have produced.
+    const initial = parseHash(location.hash);
+    history.replaceState({ depth: depthOf(DASHBOARD) }, "", hashFor(DASHBOARD));
+    // An edit link for an existing activity also gets its page put underneath.
+    if (initial.kind === "edit" && initial.id !== null) {
+      const page: Route = { kind: "detail", id: initial.id };
+      history.pushState({ depth: depthOf(page) }, "", hashFor(page));
+    }
+    if (initial.kind !== "dashboard") {
+      history.pushState({ depth: depthOf(initial) }, "", hashFor(initial));
+    }
+    setRoute(initial);
   }, []);
+
+  // Keep the URL honest about what is on screen. A link can name an activity
+  // that no longer exists (deleted, or storage wiped by a version bump), and a
+  // hand-typed hash can be unparseable — both land on the dashboard, so the
+  // address bar has to say so too.
+  useEffect(() => {
+    if (!loaded) return;
+    const id = activityIdOf(route);
+    const known = id === null || activities.some((activity) => activity.id === id);
+    const actual = known ? route : DASHBOARD;
+    if (!known) setRoute(DASHBOARD);
+    if (location.hash !== hashFor(actual)) {
+      history.replaceState({ depth: depthOf(actual) }, "", hashFor(actual));
+    }
+  }, [loaded, route, activities]);
 
   // Give the D-pad a starting point by focusing the first card once the
   // dashboard has rendered its activities.
@@ -62,11 +78,9 @@ export function App() {
   // remote's BACK button, Escape, or an on-screen Back/Cancel button (those
   // call history.back() so every route ends up here).
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const depth: number = event.state?.depth ?? DEPTH_DASHBOARD;
-      if (depth < DEPTH_DIALOG) setEditTarget(null);
-      if (depth < DEPTH_DETAIL) setSelectedId(null);
-    };
+    // Re-read the URL instead of trusting the entry's state: an address-bar
+    // edit creates an entry we never pushed and so carries no state of ours.
+    const syncFromUrl = () => setRoute(parseHash(location.hash));
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" || event.key === "Backspace") {
@@ -84,13 +98,26 @@ export function App() {
       }
     };
 
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", syncFromUrl);
+    window.addEventListener("hashchange", syncFromUrl);
     window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("popstate", syncFromUrl);
+      window.removeEventListener("hashchange", syncFromUrl);
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  // Both screens are read off the route: editing an existing activity keeps its
+  // page behind the dialog, while "new" opens on top of the dashboard.
+  const selectedId = activityIdOf(route);
+  const selected = activities.find((activity) => activity.id === selectedId) ?? null;
+  const editTarget: EditTarget =
+    route.kind !== "edit"
+      ? null
+      : route.id === null
+        ? "new"
+        : (activities.find((activity) => activity.id === route.id) ?? null);
 
   // Restore focus to the card we came from after returning to the dashboard.
   useEffect(() => {
@@ -102,15 +129,19 @@ export function App() {
     card?.focus();
   }, [selectedId, activities]);
 
+  // Every in-app navigation goes through here: state and URL move together.
+  const navigate = (next: Route) => {
+    setRoute(next);
+    history.pushState({ depth: depthOf(next) }, "", hashFor(next));
+  };
+
   const openDetail = (activity: Activity) => {
     lastOpenedId.current = activity.id;
-    setSelectedId(activity.id);
-    history.pushState({ depth: DEPTH_DETAIL }, "", hashForDetail(activity.id));
+    navigate({ kind: "detail", id: activity.id });
   };
 
   const openEdit = (target: Activity | "new") => {
-    setEditTarget(target);
-    history.pushState({ depth: DEPTH_DIALOG }, "", hashForEdit(target));
+    navigate({ kind: "edit", id: target === "new" ? null : target.id });
   };
 
   // Persist and update state in one place so storage never drifts from UI.
@@ -164,13 +195,13 @@ export function App() {
 
   const deleteActivity = (id: string) => {
     commit(activities.filter((activity) => activity.id !== id));
-    // Leave both the dialog and the now-gone activity's page behind.
-    history.go(-DEPTH_DIALOG);
+    // Leave both the dialog and the now-gone activity's page behind. Delete is
+    // only offered for an existing activity, so both entries are always there.
+    history.go(-depthOf({ kind: "edit", id }));
   };
 
   // Most urgent first (overdue at the top, greenest at the bottom).
   const sorted = [...activities].sort((a, b) => remainingRatio(a) - remainingRatio(b));
-  const selected = activities.find((activity) => activity.id === selectedId) ?? null;
 
   return (
     <>
@@ -190,6 +221,9 @@ export function App() {
       </div>
       {editTarget && (
         <EditActivityDialog
+          // Remount when the target changes: the form seeds its fields from
+          // props once, so a reused instance would show the previous activity.
+          key={editTarget === "new" ? "new" : editTarget.id}
           target={editTarget}
           onSave={saveActivity}
           onDelete={deleteActivity}
