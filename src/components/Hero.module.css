@@ -1,0 +1,109 @@
+/* A billboard, not a card: the still fills the whole band and the text sits on
+   top of it. Only the two buttons take focus; the banner itself lights up
+   around them so the remote can see where it is. */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  height: 46vh;
+  min-height: 300px;
+  padding: var(--space-6);
+  border: var(--border-width-focus) solid transparent;
+  border-radius: var(--radius-lg);
+  /* Shows through wherever the picture does not reach, and stands in for it
+     entirely on an activity that has none. */
+  background: var(--color-surface-raised);
+  overflow: hidden;
+}
+
+.hero:focus-within {
+  border-color: var(--color-accent);
+}
+
+/* The illustration is never dimmed — it dissolves. Fading it into the banner's
+   own paper on the left clears a place for the text without a dark wash over
+   the artwork, and keeps the right-hand side at full strength. */
+.image {
+  position: absolute;
+  /* Anchored to the right: every illustration has its subject dead centre, so
+     a full-width still would put a face right under the title. */
+  inset: 0 0 0 auto;
+  width: 70%;
+  height: 100%;
+  /* Faces sit in the upper half of every illustration, so bias the crop up. */
+  object-fit: cover;
+  object-position: 50% 35%;
+  mask-image: linear-gradient(to right, transparent 0%, black 38%);
+}
+
+.content {
+  position: relative;
+  max-width: 460px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.dot {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--color-status);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--font-size-3xl);
+  line-height: 1.1;
+}
+
+.stats {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-2) 0 var(--space-3);
+  font-size: var(--font-size-lg);
+}
+
+.due {
+  composes: urgentText from "../styles/status.module.css";
+  font-weight: 600;
+}
+
+.period {
+  color: var(--color-text-muted);
+}
+
+.progress {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-track);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-status);
+  transition: width var(--duration-slow) ease;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.action {
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-lg);
+  /* Coming up from the rows, scrolling the button into view would leave the
+     picture above it cut off. Claiming a screenful of room above means the
+     whole banner has to be on screen before the button counts as visible. */
+  scroll-margin-top: 100vh;
+}

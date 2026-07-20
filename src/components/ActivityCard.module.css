@@ -3,12 +3,20 @@
 .card {
   display: flex;
   flex-direction: column;
+  /* Fixed width: inside the row's flex track a card must neither stretch to
+     fill a short row nor shrink to squeeze a long one in. */
+  flex: 0 0 300px;
   min-height: 230px;
   /* Padding lives on .content so the illustration can run edge to edge. */
   padding: 0;
   background: var(--color-surface);
   border: var(--border-width-focus) solid transparent;
   border-radius: var(--radius-lg);
+  /* Scrolling a focused card into view aligns its own box, which would park it
+     flush against the screen edge — sideways too, once the row scrolls. The
+     margin reserves the same gutter the screen has, so the first and last card
+     stop inside the TV's safe area instead of touching the bezel. */
+  scroll-margin: var(--space-screen-y) var(--space-screen-x);
   color: inherit;
   font: inherit;
   text-align: left;

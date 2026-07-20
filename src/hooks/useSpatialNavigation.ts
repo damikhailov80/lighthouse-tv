@@ -25,17 +25,34 @@ function navTargets(): HTMLElement[] {
   );
 }
 
-// Picks the best element to move to in `direction`, scoring candidates by
-// distance along the travel axis plus a penalty for drifting off-axis, so we
-// prefer the element that is roughly "straight ahead".
+// Rows and bands are laid out edge to edge, so their members share a gap to the
+// pixel; this only absorbs sub-pixel rounding.
+const SAME_BAND_PX = 2;
+
+// Picks the best element to move to in `direction`.
+//
+// Up and down move a band at a time: whatever sits closest ahead defines the
+// band, and the element nearest the current column inside it wins. Anything
+// further away is out of the running however well aligned it is — without that,
+// a wide element in the row after next can beat every card in the next one, and
+// a whole row gets skipped. Left and right stay on the current line, so the last
+// card of a carousel stops there instead of handing focus to the row below.
 function nextInDirection(current: HTMLElement, direction: Direction): HTMLElement | null {
   const from = current.getBoundingClientRect();
   const fromX = from.left + from.width / 2;
   const fromY = from.top + from.height / 2;
   const vertical = direction === "up" || direction === "down";
 
-  let best: HTMLElement | null = null;
-  let bestScore = Infinity;
+  // How far ahead a candidate lies (edge to edge) and how far off the current
+  // column it is. For a horizontal move the two swap roles.
+  const distances = (rect: DOMRect) => {
+    if (direction === "up") return { ahead: from.top - rect.bottom, aside: rect.left + rect.width / 2 - fromX };
+    if (direction === "down") return { ahead: rect.top - from.bottom, aside: rect.left + rect.width / 2 - fromX };
+    if (direction === "left") return { ahead: from.left - rect.right, aside: rect.top + rect.height / 2 - fromY };
+    return { ahead: rect.left - from.right, aside: rect.top + rect.height / 2 - fromY };
+  };
+
+  const candidates: { element: HTMLElement; ahead: number; aside: number }[] = [];
 
   for (const element of navTargets()) {
     if (element === current) continue;
@@ -51,21 +68,19 @@ function nextInDirection(current: HTMLElement, direction: Direction): HTMLElemen
       (direction === "right" && dx > 1);
     if (!inDirection) continue;
 
-    const along = vertical ? Math.abs(dy) : Math.abs(dx);
-    const across = vertical ? Math.abs(dx) : Math.abs(dy);
-    // Reject candidates that are steeply off to the side (> ~63deg), then
-    // heavily penalise the remaining off-axis drift so the element straight
-    // ahead always wins over a diagonal one.
-    if (across > along * 2) continue;
+    if (!vertical && (rect.bottom <= from.top || rect.top >= from.bottom)) continue;
 
-    const score = along + across * 4;
-    if (score < bestScore) {
-      bestScore = score;
-      best = element;
-    }
+    const { ahead, aside } = distances(rect);
+    // Overlapping elements report a negative gap; they are all equally "here".
+    candidates.push({ element, ahead: Math.max(ahead, 0), aside: Math.abs(aside) });
   }
 
-  return best;
+  if (candidates.length === 0) return null;
+
+  const nearest = Math.min(...candidates.map((candidate) => candidate.ahead));
+  const band = candidates.filter((candidate) => candidate.ahead <= nearest + SAME_BAND_PX);
+
+  return band.reduce((best, candidate) => (candidate.aside < best.aside ? candidate : best)).element;
 }
 
 // Enables arrow-key / D-pad spatial navigation between [data-nav] elements.

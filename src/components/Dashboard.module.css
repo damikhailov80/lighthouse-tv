@@ -1,6 +1,10 @@
-/* Tuned so the whole 3x2 grid fits a 1280x720 TV screen without scrolling. */
+/* A stack of full-width bands — the banner, then one carousel per status.
+   Tuned so the banner and the first row fill a 1280x720 TV screen, with the
+   next row peeking in from below. */
 .dashboard {
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
   padding: var(--space-screen-y) var(--space-screen-x);
 }
 
@@ -9,7 +13,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-5);
 }
 
 .brand {

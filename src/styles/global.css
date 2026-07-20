@@ -7,6 +7,13 @@
   box-sizing: border-box;
 }
 
+/* The navigation hook scrolls the newly focused element into view; smooth
+   scrolling turns that into a glide instead of a jump, both for the page and
+   for the horizontal carousels. */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-height: 100vh;

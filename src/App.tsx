@@ -61,14 +61,15 @@ export function App() {
     }
   }, [loaded, route, activities]);
 
-  // Give the D-pad a starting point by focusing the first card once the
-  // dashboard has rendered its activities.
+  // Give the D-pad a starting point by focusing the banner once the dashboard
+  // has rendered its activities — it already features the most urgent one.
   useEffect(() => {
     if (didInitialFocus.current || activities.length === 0) return;
     didInitialFocus.current = true;
     // Matched by data attribute, not by class: class names are hashed by CSS
     // Modules and are not stable selectors.
     const start =
+      document.querySelector<HTMLElement>("[data-hero]") ??
       document.querySelector<HTMLElement>("[data-card-id]") ??
       document.querySelector<HTMLElement>("[data-nav]");
     start?.focus();
@@ -150,8 +151,9 @@ export function App() {
     setActivities(next);
   };
 
-  // Mark an activity done: reset its timer to now and return to the dashboard,
-  // where the card is now green.
+  // Mark an activity done: reset its timer to now. Where to go afterwards is up
+  // to the caller — the activity page leaves for the dashboard, the banner is
+  // already there and just watches its own activity turn green.
   const markDone = (id: string) => {
     commit(
       activities.map((activity) =>
@@ -160,7 +162,6 @@ export function App() {
           : activity,
       ),
     );
-    history.back();
   };
 
   // Create a new activity or update an existing one from the dialog.
@@ -211,12 +212,21 @@ export function App() {
         {selected ? (
           <ActivityDetail
             activity={selected}
-            onMarkDone={markDone}
+            onMarkDone={(id) => {
+              markDone(id);
+              history.back();
+            }}
             onEdit={openEdit}
             onBack={() => history.back()}
           />
         ) : (
-          <Dashboard activities={sorted} onOpen={openDetail} onAdd={() => openEdit("new")} />
+          <Dashboard
+            activities={sorted}
+            onOpen={openDetail}
+            onAdd={() => openEdit("new")}
+            onMarkDone={markDone}
+            onEdit={openEdit}
+          />
         )}
       </div>
       {editTarget && (

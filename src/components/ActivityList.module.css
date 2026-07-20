@@ -1,6 +1,0 @@
-.list {
-  display: grid;
-  /* Always three columns on a TV; falls back gracefully on narrow screens. */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-4);
-}

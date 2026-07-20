@@ -1,0 +1,26 @@
+.title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.track {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  /* Runs the cards to the very edge of the screen, so the last one is cut off
+     and reads as "there is more to the right". The negative margin cancels the
+     dashboard's own padding for the track alone; the vertical pair keeps the
+     focus ring and the card's zoom from being clipped by overflow-x. */
+  padding: var(--space-1) var(--space-screen-x);
+  margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-screen-x));
+  /* No pointer on a TV, so a scrollbar would only ever be decoration. */
+  scrollbar-width: none;
+}
+
+.track::-webkit-scrollbar {
+  display: none;
+}
