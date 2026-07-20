@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Lighthouse</string>
+    <!-- How the screensaver is listed in the TV's Screen saver settings. -->
+    <string name="dream_name">Lighthouse — today</string>
 </resources>

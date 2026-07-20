@@ -1,0 +1,152 @@
+/* The idle screen. One activity, a clock, and nothing to press: no focus ring,
+   no controls, no scrolling — the remote leaves the screensaver rather than
+   moving around inside it. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--color-bg-top), var(--color-bg-bottom));
+}
+
+/* Same treatment as the dashboard banner: the still is not dimmed, it dissolves
+   into the background on the left to clear a place for the text. */
+.image {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 62%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 35%;
+  mask-image: linear-gradient(to right, transparent 0%, black 42%);
+}
+
+/* Everything that carries ink drifts, slowly and forever: a still image left on
+   a panel all evening is what burns it in. The travel is small enough to go
+   unnoticed and slow enough never to read as movement. */
+.frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: var(--space-10);
+  animation: drift 240s ease-in-out infinite alternate;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(-1.2%, -1.6%);
+  }
+  to {
+    transform: translate(1.2%, 1.6%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    animation: none;
+  }
+}
+
+.clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: flex-end;
+  gap: var(--space-1);
+}
+
+/* The one place the display serif is right on a screen full of activity names:
+   the time is furniture, not data about an activity. */
+.time {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--font-size-3xl);
+  line-height: 1;
+}
+
+.date {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
+.content {
+  max-width: 560px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.logo {
+  height: var(--space-6);
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}
+
+.kicker {
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--font-size-3xl);
+  line-height: 1.15;
+}
+
+/* Sized off the title, like the banner's, so it reads as part of the heading. */
+.dot {
+  flex: 0 0 auto;
+  width: calc(var(--font-size-3xl) * 0.5);
+  height: calc(var(--font-size-3xl) * 0.5);
+  border-radius: 50%;
+  background: var(--color-status);
+  transform: translateY(calc(var(--font-size-3xl) * -0.1));
+}
+
+.stats {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  font-size: var(--font-size-lg);
+}
+
+.due {
+  composes: urgentText from "../styles/status.module.css";
+  font-weight: 600;
+}
+
+/* Green on its own account, not through --color-status: the activity may be due
+   again tomorrow and already amber, but it is still finished for today. */
+.done {
+  font-weight: 700;
+  color: var(--color-status-green);
+}
+
+.period {
+  color: var(--color-text-muted);
+}
+
+.also {
+  margin: var(--space-5) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
