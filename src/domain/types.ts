@@ -4,6 +4,17 @@ export type ActivityStatus = "green" | "yellow" | "orange" | "red";
 // The unit a repeat period is expressed in.
 export type PeriodUnit = "day" | "week" | "month";
 
+// Illustration shown on an activity card. Stored as a key rather than a URL:
+// the bundler hashes asset URLs on every build, so a stored URL would break
+// after the next release, while a key stays valid. See src/assets/images.ts.
+export type ActivityImage =
+  | "board-games"
+  | "cycling"
+  | "meeting-friends"
+  | "reading"
+  | "walking"
+  | "watching-film";
+
 // A recurring activity the user wants to keep up with.
 export interface Activity {
   id: string;
@@ -13,4 +24,6 @@ export interface Activity {
   unit: PeriodUnit;
   // ISO timestamp of the last time it was done.
   lastDoneAt: string;
+  // Optional: activities created before images existed simply have no picture.
+  image?: ActivityImage;
 }

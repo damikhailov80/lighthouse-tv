@@ -4,7 +4,8 @@
   display: flex;
   flex-direction: column;
   min-height: 230px;
-  padding: var(--space-4) var(--space-5);
+  /* Padding lives on .content so the illustration can run edge to edge. */
+  padding: 0;
   background: var(--color-surface);
   border: var(--border-width-focus) solid transparent;
   border-radius: var(--radius-lg);
@@ -12,11 +13,71 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
 }
 
 /* Focus highlight — matches the outlined card in the design. */
 .card:focus {
   border-color: var(--color-accent);
+}
+
+/* Hover is a weaker echo of focus, for the desktop browser used during
+   development; the TV has no pointer, so it never competes with the D-pad
+   highlight there. Focus wins when both apply. */
+.card:hover:not(:focus) {
+  border-color: var(--color-border);
+}
+
+/* ---------- Illustration ---------- */
+
+.media {
+  position: relative;
+  flex: 0 0 auto;
+  height: 150px;
+  background: var(--color-track);
+  /* Crops the focus zoom to the frame. Without it the scaled image spills past
+     the fade gradient below and shows up as a seam above the title. */
+  overflow: hidden;
+}
+
+.image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Faces sit in the upper half of every illustration, so bias the crop up. */
+  object-fit: cover;
+  object-position: 50% 35%;
+  transition: transform var(--duration-slow) ease;
+}
+
+/* A gentle zoom marks the focused card without moving the layout. */
+.card:focus .image {
+  transform: scale(1.04);
+}
+
+/* :not(:focus) so a card that is both hovered and focused keeps the stronger
+   focus zoom instead of the later rule quietly overriding it. */
+.card:hover:not(:focus) .image {
+  transform: scale(1.02);
+}
+
+/* Fades the bottom of the picture into the card so the title never sits on a
+   busy edge. */
+.media::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 30%;
+  background: linear-gradient(to bottom, transparent, var(--color-surface));
+}
+
+/* ---------- Content ---------- */
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-5) var(--space-4);
 }
 
 .top {
@@ -34,15 +95,35 @@
 
 .title {
   display: block;
-  margin: var(--space-2) 0 0;
+  margin: 0;
   font-size: var(--font-size-xl);
   font-weight: 600;
   line-height: 1.15;
 }
 
+.top + .title {
+  margin-top: var(--space-2);
+}
+
+/* With a picture the status is a badge on the title row; without one it keeps
+   its own row above the title, as before. */
+.titleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.titleRow .dot {
+  flex: 0 0 auto;
+  /* Nudged down to sit on the title's optical centre, not its baseline. */
+  transform: translateY(-0.15em);
+}
+
 .footer {
   display: block;
   margin-top: auto;
+  padding-top: var(--space-3);
 }
 
 .progress {
@@ -66,7 +147,6 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: var(--space-3);
   font-size: var(--font-size-md);
 }
 

@@ -8,10 +8,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "tv:build": "bash android/sync-web.sh && cd android && ./gradlew assembleDebug",
-    "tv:connect": "adb connect ${TV_IP:-192.168.1.11}:5555",
+    "tv:connect": "adb connect ${TV_IP:-192.168.1.11}:5555 | tee /dev/stderr | grep -q 'connected to'",
     "tv:upload": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
     "tv:run": "adb shell am start -n com.lighthouse.tv/.MainActivity",
-    "tv:deploy": "npm run tv:build && npm run tv:upload && npm run tv:run",
+    "tv:deploy": "npm run tv:connect && npm run tv:build && npm run tv:upload && npm run tv:run",
     "tv:devices": "adb devices -l",
     "tv:logs": "adb logcat -s chromium:E chromium:W AndroidRuntime:E"
   },

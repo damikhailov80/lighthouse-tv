@@ -1,6 +1,7 @@
 import type { Activity } from "../domain/types";
 import { progressFraction, statusOf } from "../domain/status";
 import { dueLabel, periodShort } from "../domain/format";
+import { activityImage } from "../assets/images";
 import status from "../styles/status.module.css";
 import styles from "./ActivityCard.module.css";
 
@@ -15,6 +16,7 @@ export function ActivityCard({ activity, onOpen }: ActivityCardProps) {
   // ActivityStatus values double as class names in status.module.css.
   const statusClass = status[statusOf(activity)];
   const progress = Math.round(progressFraction(activity) * 100);
+  const image = activityImage(activity.image);
 
   return (
     <button
@@ -24,19 +26,36 @@ export function ActivityCard({ activity, onOpen }: ActivityCardProps) {
       data-card-id={activity.id}
       onClick={() => onOpen(activity)}
     >
-      <span className={styles.top}>
-        <span className={styles.dot} aria-hidden="true" />
-      </span>
-
-      <span className={styles.title}>{activity.title}</span>
-
-      <span className={styles.footer}>
-        <span className={styles.progress} aria-hidden="true">
-          <span className={styles.progressFill} style={{ width: `${progress}%` }} />
+      {image && (
+        <span className={styles.media}>
+          {/* Decorative: the title right below already names the activity. */}
+          <img className={styles.image} src={image.src} alt="" />
         </span>
-        <span className={styles.stats}>
-          <span className={styles.due}>{dueLabel(activity)}</span>
-          <span className={styles.period}>{periodShort(activity)}</span>
+      )}
+
+      <span className={styles.content}>
+        {image ? (
+          <span className={styles.titleRow}>
+            <span className={styles.title}>{activity.title}</span>
+            <span className={styles.dot} aria-hidden="true" />
+          </span>
+        ) : (
+          <>
+            <span className={styles.top}>
+              <span className={styles.dot} aria-hidden="true" />
+            </span>
+            <span className={styles.title}>{activity.title}</span>
+          </>
+        )}
+
+        <span className={styles.footer}>
+          <span className={styles.progress} aria-hidden="true">
+            <span className={styles.progressFill} style={{ width: `${progress}%` }} />
+          </span>
+          <span className={styles.stats}>
+            <span className={styles.due}>{dueLabel(activity)}</span>
+            <span className={styles.period}>{periodShort(activity)}</span>
+          </span>
         </span>
       </span>
     </button>

@@ -127,7 +127,13 @@ export function App() {
       commit(
         activities.map((activity) =>
           activity.id === draft.id
-            ? { ...activity, title: draft.title, every: draft.every, unit: draft.unit }
+            ? {
+                ...activity,
+                title: draft.title,
+                every: draft.every,
+                unit: draft.unit,
+                image: draft.image,
+              }
             : activity,
         ),
       );
@@ -137,6 +143,7 @@ export function App() {
         title: draft.title,
         every: draft.every,
         unit: draft.unit,
+        image: draft.image,
         lastDoneAt: new Date().toISOString(),
       };
       commit([...activities, created]);

@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Activity } from "../domain/types";
 import { daysSinceLastDone, progressFraction, statusOf } from "../domain/status";
 import { dueLabel, periodShort } from "../domain/format";
+import { activityImage } from "../assets/images";
 import buttons from "../styles/Button.module.css";
 import status from "../styles/status.module.css";
 import styles from "./ActivityDetail.module.css";
@@ -20,6 +21,7 @@ export function ActivityDetail({ activity, onMarkDone, onEdit, onBack }: Activit
   const statusClass = status[statusOf(activity)];
   const progress = Math.round(progressFraction(activity) * 100);
   const sinceDone = daysSinceLastDone(activity);
+  const image = activityImage(activity.image);
   const firstAction = useRef<HTMLButtonElement>(null);
 
   // Land the D-pad on the primary action as soon as the page opens.
@@ -36,6 +38,13 @@ export function ActivityDetail({ activity, onMarkDone, onEdit, onBack }: Activit
       </header>
 
       <div className={styles.body}>
+        {image && (
+          <div className={styles.hero}>
+            {/* Decorative: the heading below already names the activity. */}
+            <img className={styles.heroImage} src={image.src} alt="" />
+          </div>
+        )}
+
         <span className={styles.dot} aria-hidden="true" />
         <h1 className={styles.title}>{activity.title}</h1>
 

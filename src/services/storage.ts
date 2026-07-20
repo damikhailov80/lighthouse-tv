@@ -1,30 +1,23 @@
 import type { Activity } from "../domain/types";
 
-const STORAGE_KEY = "lighthouse.activities";
+// Bumped when stored records are no longer worth keeping. Reading a new key
+// makes the app fall back to the seed, which is how the illustrated activities
+// replace the ones saved before pictures existed.
+const STORAGE_KEY = "lighthouse.activities.v2";
 
-// Older versions stored a raw `intervalDays`. Convert those records to the
-// period model ({ every, unit }) so existing data keeps working.
-function normalize(raw: unknown): Activity {
-  const value = raw as Activity & { intervalDays?: number };
-  if (value.unit === undefined && typeof value.intervalDays === "number") {
-    return {
-      id: value.id,
-      title: value.title,
-      every: value.intervalDays,
-      unit: "day",
-      lastDoneAt: value.lastDoneAt,
-    };
-  }
-  return value;
-}
+// Keys of superseded formats. They are deleted on load so an old dataset can
+// never come back, and so the TV does not carry them around forever.
+const LEGACY_KEYS = ["lighthouse.activities"];
 
 // Loads activities from localStorage. Returns an empty list if there is
 // nothing stored yet or the stored value is corrupted.
 export function loadActivities(): Activity[] {
+  for (const key of LEGACY_KEYS) localStorage.removeItem(key);
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    return (JSON.parse(raw) as unknown[]).map(normalize);
+    return JSON.parse(raw) as Activity[];
   } catch {
     return [];
   }

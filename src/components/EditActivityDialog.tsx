@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import type { Activity, PeriodUnit } from "../domain/types";
+import type { Activity, ActivityImage, PeriodUnit } from "../domain/types";
+import { ACTIVITY_IMAGES } from "../assets/images";
 import buttons from "../styles/Button.module.css";
 import styles from "./EditActivityDialog.module.css";
 
@@ -9,6 +10,7 @@ export interface ActivityDraft {
   title: string;
   every: number;
   unit: PeriodUnit;
+  image?: ActivityImage;
 }
 
 interface EditActivityDialogProps {
@@ -30,6 +32,7 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
   const [title, setTitle] = useState(isNew ? "" : target.title);
   const [every, setEvery] = useState(isNew ? 1 : target.every);
   const [unit, setUnit] = useState<PeriodUnit>(isNew ? "week" : target.unit);
+  const [image, setImage] = useState<ActivityImage | undefined>(isNew ? undefined : target.image);
 
   const canSave = title.trim().length > 0 && every > 0;
 
@@ -41,6 +44,7 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
       title: title.trim(),
       every,
       unit,
+      image,
     });
   };
 
@@ -93,6 +97,35 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+
+        <div className={styles.field}>
+          <span className={styles.label}>Illustration</span>
+          <div className={styles.picker}>
+            <button
+              type="button"
+              data-nav
+              className={image === undefined ? styles.tileEmptySelected : styles.tileEmpty}
+              aria-label="No illustration"
+              aria-pressed={image === undefined}
+              onClick={() => setImage(undefined)}
+            >
+              None
+            </button>
+            {ACTIVITY_IMAGES.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                data-nav
+                className={image === option.key ? styles.tileSelected : styles.tile}
+                aria-label={option.label}
+                aria-pressed={image === option.key}
+                onClick={() => setImage(option.key)}
+              >
+                <img className={styles.tileImage} src={option.src} alt="" />
+              </button>
+            ))}
           </div>
         </div>
 
