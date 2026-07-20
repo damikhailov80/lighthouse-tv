@@ -83,6 +83,69 @@ function nextInDirection(current: HTMLElement, direction: Direction): HTMLElemen
   return band.reduce((best, candidate) => (candidate.aside < best.aside ? candidate : best)).element;
 }
 
+// Grace period for the glide to begin. A move inside the visible part of the
+// page never scrolls at all, and must not be made to wait for a scroll that is
+// not coming.
+const SCROLL_START_MS = 100;
+// Safety net: `scrollend` is recent, and an older WebView will never send it.
+const SCROLL_MAX_MS = 700;
+// The small pause once the page has landed, so a section is read before the
+// next press is taken.
+const SETTLE_MS = 90;
+
+type Axis = "vertical" | "horizontal";
+
+// Presses are ignored while the scroller they set in motion is still gliding.
+// Without this the browser restarts its scroll animation on every press — it
+// never arrives, and the screen reads as pause, jump, pause.
+//
+// The two axes are held separately: they are driven by different scrollers (the
+// page and the row's own track), and a viewer stepping along a carousel should
+// not be waiting on a scroll the page happened to make.
+const scrolling: Record<Axis, boolean> = { vertical: false, horizontal: false };
+// Invalidates the timers of a hold that has been superseded or unmounted.
+const holdId: Record<Axis, number> = { vertical: 0, horizontal: 0 };
+
+// `scroll` and `scrollend` only bubble from the document, so a hold has to
+// listen on the element that actually moves: the page for a vertical step, the
+// nearest ancestor able to scroll sideways for a horizontal one.
+function scrollerFor(axis: Axis, element: HTMLElement): HTMLElement | Window {
+  if (axis === "vertical") return window;
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    if (node.scrollWidth > node.clientWidth) return node;
+  }
+  return window;
+}
+
+function holdUntilScrollSettles(axis: Axis, element: HTMLElement) {
+  const scroller = scrollerFor(axis, element);
+  scrolling[axis] = true;
+  const id = ++holdId[axis];
+  let moved = false;
+  let timer = 0;
+
+  const noteScroll = () => {
+    moved = true;
+  };
+
+  const release = () => {
+    scroller.removeEventListener("scroll", noteScroll);
+    scroller.removeEventListener("scrollend", release);
+    clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      if (id === holdId[axis]) scrolling[axis] = false;
+    }, SETTLE_MS);
+  };
+
+  scroller.addEventListener("scroll", noteScroll, { passive: true });
+  scroller.addEventListener("scrollend", release);
+
+  timer = window.setTimeout(() => {
+    if (!moved) return release();
+    timer = window.setTimeout(release, SCROLL_MAX_MS);
+  }, SCROLL_START_MS);
+}
+
 // Enables arrow-key / D-pad spatial navigation between [data-nav] elements.
 // Enter / OK is left to the elements themselves (native button activation).
 export function useSpatialNavigation() {
@@ -96,8 +159,16 @@ export function useSpatialNavigation() {
         active instanceof HTMLElement &&
         (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
 
-      // Left/right inside a text field move the caret, not the focus.
+      // Left/right inside a text field move the caret, not the focus. Checked
+      // before the hold, so a caret is never held back by a scroll.
       if (inTextField && (direction === "left" || direction === "right")) return;
+
+      const axis: Axis =
+        direction === "up" || direction === "down" ? "vertical" : "horizontal";
+      if (scrolling[axis]) {
+        event.preventDefault();
+        return;
+      }
 
       const current =
         active instanceof HTMLElement && active.hasAttribute("data-nav")
@@ -118,10 +189,18 @@ export function useSpatialNavigation() {
         next.focus({ preventScroll: true });
         // Keep the newly focused control on screen without jumping the page.
         next.scrollIntoView({ block: "nearest", inline: "nearest" });
+        holdUntilScrollSettles(axis, next);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      // Leave nothing behind that could unlock a later mount mid-scroll.
+      for (const axis of ["vertical", "horizontal"] as const) {
+        holdId[axis] += 1;
+        scrolling[axis] = false;
+      }
+    };
   }, []);
 }

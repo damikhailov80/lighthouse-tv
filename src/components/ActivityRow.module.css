@@ -1,3 +1,17 @@
+/* The row runs the full width of the screen so its band can too: the negative
+   margin cancels the dashboard's side padding, and the padding puts the heading
+   back where it was. Vertically it eats half the dashboard's gap on each side,
+   which is what makes neighbouring bands meet instead of leaving a stripe of
+   bare background between them. */
+.row {
+  padding: calc(var(--space-band) / 2) var(--space-screen-x);
+  margin: calc(-1 * var(--space-band) / 2) calc(-1 * var(--space-screen-x));
+}
+
+.banded {
+  background: var(--color-band);
+}
+
 .title {
   margin: 0 0 var(--space-3);
   font-size: var(--font-size-lg);
@@ -13,10 +27,13 @@
   overflow-x: auto;
   /* Runs the cards to the very edge of the screen, so the last one is cut off
      and reads as "there is more to the right". The negative margin cancels the
-     dashboard's own padding for the track alone; the vertical pair keeps the
+     row's own side padding for the track alone; the vertical pair keeps the
      focus ring and the card's zoom from being clipped by overflow-x. */
   padding: var(--space-1) var(--space-screen-x);
   margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-screen-x));
+  /* `scroll-behavior` is not inherited, so the page's smooth scrolling has to
+     be repeated here for the track to glide rather than jump between cards. */
+  scroll-behavior: smooth;
   /* No pointer on a TV, so a scrollbar would only ever be decoration. */
   scrollbar-width: none;
 }

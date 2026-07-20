@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icon for the Android 12+ launch screen. The system masks it into a circle
+     and shows it on the navy splash background, so the field is amber and the
+     mark navy — the same disc the web boot screen in index.html draws, which
+     makes the hand-off from the system splash to the page invisible.
+     The mark sits well inside the 108dp square: the mask keeps only the middle
+     two thirds. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/logo_beam" />
+    <item
+        android:drawable="@drawable/logo_lighthouse"
+        android:gravity="center"
+        android:width="56dp"
+        android:height="56dp" />
+</layer-list>

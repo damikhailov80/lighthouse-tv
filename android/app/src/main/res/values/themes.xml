@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+    <!-- Everything the app draws before the web view has a frame is navy: the
+         launch (starting) window, the activity background and the web view
+         itself. A bright flash on a TV in a dark room is blinding, so nothing
+         light may appear until the dashboard is actually on screen.
+         Split into Base + AppTheme so values-v31 can add the Android 12+
+         splash-screen attributes on top of the same set. -->
+    <style name="AppTheme.Base" parent="@android:style/Theme.Material.NoActionBar">
         <item name="android:windowFullscreen">true</item>
-        <!-- Cream background avoids a white flash before the web view paints. -->
-        <item name="android:windowBackground">@color/cream</item>
+        <item name="android:windowBackground">@color/logo_navy</item>
+        <!-- The starting window and any view that has no background of its own
+             fall back to this, not to windowBackground. -->
+        <item name="android:colorBackground">@color/logo_navy</item>
     </style>
+
+    <style name="AppTheme" parent="AppTheme.Base" />
 </resources>

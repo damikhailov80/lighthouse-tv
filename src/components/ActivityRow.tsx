@@ -17,19 +17,23 @@ interface ActivityRowProps {
   id: string;
   title: string;
   activities: Activity[];
+  // Tints this row's band. Decided by the dashboard rather than by :nth-child
+  // here: the banner above the rows is a <section> too and comes and goes, so
+  // counting siblings in CSS would flip the whole zebra when it disappears.
+  banded: boolean;
   onOpen: (activity: Activity) => void;
 }
 
 // One horizontal carousel: left/right walks the cards, up/down leaves the row.
 // The track scrolls itself — the navigation hook calls scrollIntoView on the
 // newly focused card, which is enough to keep it in view.
-export function ActivityRow({ id, title, activities, onOpen }: ActivityRowProps) {
+export function ActivityRow({ id, title, activities, banded, onOpen }: ActivityRowProps) {
   // Three cards or fewer never reach the right edge at their normal width, so
   // they switch to the wide card and share the whole track between them.
   const wide = ALWAYS_WIDE.includes(id) || activities.length <= WIDE_UP_TO;
 
   return (
-    <section data-row={id}>
+    <section className={`${styles.row} ${banded ? styles.banded : ""}`} data-row={id}>
       <h2 className={styles.title}>{title}</h2>
       <div className={styles.track}>
         {activities.map((activity) => (

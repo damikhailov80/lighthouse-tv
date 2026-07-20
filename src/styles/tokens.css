@@ -66,6 +66,15 @@
 
   /* Tinted overlays derived from the ink colour. */
   --color-track: rgba(60, 45, 25, 0.12);
+  /* Every other row is laid on this, so the stack of carousels reads as bands
+     rather than one long sheet. A whole palette step rather than a wash: two
+     translucent versions were tried first and both failed the same way — an
+     overlay lands too close to the background to separate anything, and a
+     neutral one drains the warmth out of the cream and reads as dirt. Sand is
+     a colour the illustrations already contain, so it darkens the row without
+     dulling it. It also sits further from the cards than the plain background
+     does, which makes them read better on a band than off one. */
+  --color-band: var(--palette-cream-400);
   --color-scrim: rgba(30, 25, 18, 0.55);
 
   /* ---------- Typography ---------- */
@@ -91,6 +100,14 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
   --space-8: 3rem;
+  --space-10: 4rem;
+
+  /* The vertical rhythm of the dashboard's bands. Split in half it becomes each
+     row's own top and bottom padding, which is what lets neighbouring bands
+     meet exactly; the two must be read together, so they share this one token
+     rather than each naming a size. Raising it gives the rows air — at the cost
+     of how much of the next one is left peeking on a 720p screen. */
+  --space-band: var(--space-10);
 
   /* Safe area for the TV: keeps content off the bezel on a 1280x720 screen. */
   --space-screen-y: 3vh;

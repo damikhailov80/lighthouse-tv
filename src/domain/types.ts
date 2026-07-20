@@ -9,9 +9,12 @@ export type PeriodUnit = "day" | "week" | "month";
 // after the next release, while a key stays valid. See src/assets/images.ts.
 export type ActivityImage =
   | "board-games"
+  | "call-parents"
   | "cycling"
+  | "go-to-beach"
   | "meeting-friends"
   | "reading"
+  | "visit-grandma"
   | "walking"
   | "watching-film";
 

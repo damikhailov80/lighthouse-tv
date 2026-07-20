@@ -8,8 +8,9 @@
 }
 
 /* The navigation hook scrolls the newly focused element into view; smooth
-   scrolling turns that into a glide instead of a jump, both for the page and
-   for the horizontal carousels. */
+   scrolling turns that into a glide instead of a jump. The hook stops taking
+   D-pad presses while the glide is running, so one press is one step. The
+   carousels repeat this for themselves in ActivityRow.module.css. */
 html {
   scroll-behavior: smooth;
 }

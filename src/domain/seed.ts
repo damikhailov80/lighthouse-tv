@@ -14,5 +14,8 @@ export function seedActivities(): Activity[] {
     { id: "4", title: "Board game night", every: 2, unit: "week", lastDoneAt: daysAgo(9), image: "board-games" },
     { id: "5", title: "Invite friends over", every: 2, unit: "week", lastDoneAt: daysAgo(12), image: "meeting-friends" },
     { id: "6", title: "Movie night", every: 1, unit: "month", lastDoneAt: daysAgo(50), image: "watching-film" },
+    { id: "7", title: "Call parents", every: 1, unit: "week", lastDoneAt: daysAgo(1), image: "call-parents" },
+    { id: "8", title: "Go to the beach", every: 1, unit: "month", lastDoneAt: daysAgo(26), image: "go-to-beach" },
+    { id: "9", title: "Visit grandma", every: 2, unit: "week", lastDoneAt: daysAgo(15), image: "visit-grandma" },
   ];
 }

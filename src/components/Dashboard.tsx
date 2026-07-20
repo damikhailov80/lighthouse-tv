@@ -49,12 +49,15 @@ export function Dashboard({
 
       {hero && <Hero activity={hero} onMarkDone={onMarkDone} onEdit={onEdit} />}
 
-      {sections.map((section) => (
+      {sections.map((section, index) => (
         <ActivityRow
           key={section.id}
           id={section.id}
           title={section.title}
           activities={section.activities}
+          // Second, fourth, … so the first row carries straight on from the
+          // banner and the zebra starts one step down.
+          banded={index % 2 === 1}
           onOpen={onOpen}
         />
       ))}

@@ -15,8 +15,144 @@
       href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2064%2064%27%3E%3Cpath%20d=%27M24%2015v9L1%2030V9Z%27%20fill=%27%23f0cd72%27%20opacity=%27.55%27/%3E%3Cpath%20d=%27M40%2015v9l23%206V9Z%27%20fill=%27%23f0cd72%27%20opacity=%27.55%27/%3E%3Cg%20fill=%27%231a2436%27%3E%3Cpath%20d=%27M31.1%202.5h1.8v4.5h-1.8zM32%205.5%2045%2014.5H19ZM18%2013.5h28v2.2H18zM24%2015.5h16v8H24zM21%2023h22v5H21zM25%2028h14l6%2027.5H19ZM13%2055h38v3.6H13z%27/%3E%3C/g%3E%3Cg%20fill=%27%23f6ead2%27%3E%3Cpath%20d=%27M25.5%2017h3.5v5h-3.5zM30.25%2017h3.5v5h-3.5zM35%2017h3.5v5H35z%27/%3E%3C/g%3E%3Cg%20fill=%27%23f6ead2%27%20clip-path=%27url(%23t)%27%3E%3Cpath%20d=%27M14%2044%2050%2018v8L14%2052ZM14%2060%2050%2034v8L14%2068Z%27/%3E%3C/g%3E%3CclipPath%20id=%27t%27%3E%3Cpath%20d=%27M25%2028h14l6%2027.5H19Z%27/%3E%3C/clipPath%3E%3C/svg%3E"
     />
     <title>Lighthouse</title>
+
+    <!-- Boot screen. Inline and first in the document so it paints before any
+         stylesheet or script is parsed: the app itself is cream, and a bright
+         flash on a TV in a dark room is blinding, so the document starts navy
+         and holds this splash until React has rendered the dashboard.
+         Colours are literals here — tokens.css is not loaded yet.
+
+         Only on the TV: in a browser the page is already on screen instantly
+         and a splash would just be in the way, so both the dark document and
+         the boot screen are gated on [data-env="tv"] (set by the script
+         below). -->
+    <style>
+      html[data-env="tv"] {
+        background: #1a2436;
+      }
+
+      #splash {
+        display: none;
+      }
+
+      html[data-env="tv"] #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 40px;
+        background: #1a2436;
+        transition: opacity 400ms ease;
+      }
+
+      /* Set by main.tsx once the app is on screen; the element is removed when
+         the fade ends. */
+      #splash.done {
+        opacity: 0;
+      }
+
+      #splash svg {
+        width: 200px;
+        height: 200px;
+      }
+
+      /* The beams sweep the way a real lighthouse does — this is the loading
+         indicator as much as the bar is. */
+      #splash .beam {
+        animation: splash-beam 2.4s ease-in-out infinite;
+      }
+
+      #splash .beam-right {
+        animation-delay: 1.2s;
+      }
+
+      @keyframes splash-beam {
+        0%,
+        100% {
+          opacity: 0.15;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      /* Indeterminate progress bar: the load is short and unmeasurable, so the
+         segment just travels the track. */
+      #splash .bar {
+        position: relative;
+        overflow: hidden;
+        width: 240px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(246, 234, 210, 0.15);
+      }
+
+      #splash .bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40%;
+        border-radius: 2px;
+        background: #f0cd72;
+        animation: splash-bar 1.4s ease-in-out infinite;
+      }
+
+      @keyframes splash-bar {
+        0% {
+          left: -40%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+    </style>
+
+    <script>
+      // Are we running as the TV app? The Android shell loads the bundle from
+      // file://android_asset/www, while every browser context (dev server,
+      // preview, a laptop opening the page) is served over http. Runs in the
+      // head, before the first paint, so the splash never shows in a browser.
+      if (location.protocol === "file:") document.documentElement.dataset.env = "tv";
+    </script>
   </head>
   <body>
+    <!-- Same mark as src/components/Logo.tsx, on an amber disc: the navy mark
+         would disappear on the navy screen, and the disc keeps it in the app's
+         own colours instead of inverting it. The mark is scaled down inside the
+         circle so the beams stay clear of the edge. Duplicated as plain markup
+         because the React component cannot render before the bundle loads. -->
+    <div id="splash">
+      <svg viewBox="0 0 64 64" role="img" aria-label="Lighthouse">
+        <defs>
+          <clipPath id="splash-tower">
+            <path d="M25 28h14l6 27.5H19Z" />
+          </clipPath>
+        </defs>
+        <circle cx="32" cy="32" r="32" fill="#f0cd72" />
+        <g transform="translate(32 32) scale(0.78) translate(-32 -32)">
+          <g fill="#fbf4e7">
+            <path class="beam" d="M24 15v9L1 30V9Z" />
+            <path class="beam beam-right" d="M40 15v9l23 6V9Z" />
+          </g>
+          <g fill="#1a2436">
+            <path
+              d="M31.1 2.5h1.8v4.5h-1.8zM32 5.5 45 14.5H19ZM18 13.5h28v2.2H18zM24 15.5h16v8H24zM21 23h22v5H21zM25 28h14l6 27.5H19ZM13 55h38v3.6H13z"
+            />
+          </g>
+          <g fill="#f6ead2">
+            <path d="M25.5 17h3.5v5h-3.5zM30.25 17h3.5v5h-3.5zM35 17h3.5v5H35z" />
+            <g clip-path="url(#splash-tower)">
+              <path d="M14 44 50 18v8L14 52ZM14 60 50 34v8L14 68Z" />
+            </g>
+          </g>
+        </g>
+      </svg>
+      <div class="bar"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
