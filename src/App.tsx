@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { Activity } from "./domain/types";
-import { loadActivities, loadHeroPick, saveActivities, saveHeroPick } from "./services/storage";
+import {
+  loadActivities,
+  loadDayLayout,
+  loadHeroPick,
+  saveActivities,
+  saveDayLayout,
+  saveHeroPick,
+} from "./services/storage";
 import { remainingRatio } from "./domain/status";
-import { dayKey, heroOf } from "./domain/sections";
+import { dayKey, heroOf, layoutOf, type DayLayout } from "./domain/sections";
 import { seedActivities } from "./domain/seed";
 import { Dashboard } from "./components/Dashboard";
 import { ActivityDetail } from "./components/ActivityDetail";
@@ -38,6 +45,8 @@ export function App() {
   const [loaded, setLoaded] = useState(false);
   // The activity the banner is showing today. Null until the pick is made.
   const [heroId, setHeroId] = useState<string | null>(null);
+  // The rows the dashboard is showing today. Null until they are dealt.
+  const [layout, setLayout] = useState<DayLayout | null>(null);
   const didInitialFocus = useRef(false);
   // Where the card we opened sat: which row, and how far along it. The seat is
   // remembered instead of the card itself because marking an activity done
@@ -100,6 +109,26 @@ export function App() {
     saveHeroPick({ day: today, id: picked });
     setHeroId(picked);
   }, [activities]);
+
+  // Deal the dashboard's rows once a day and then hold them. Marking an activity
+  // done must not rearrange the screen: the card stays in the row it was dealt
+  // into and only changes colour, and a row that was worth a heading this
+  // morning keeps it even after everything in it has been finished. Re-dealt
+  // when the day rolls over.
+  useEffect(() => {
+    if (activities.length === 0) return;
+    const today = dayKey();
+    if (layout?.day === today) return;
+
+    const stored = loadDayLayout();
+    if (stored?.day === today) {
+      setLayout(stored);
+      return;
+    }
+    const dealt = layoutOf(activities);
+    saveDayLayout(dealt);
+    setLayout(dealt);
+  }, [activities, layout]);
 
   // Give the D-pad a starting point by focusing the banner once the dashboard
   // has rendered its activities — it already features the most urgent one.
@@ -281,6 +310,7 @@ export function App() {
           <Dashboard
             activities={sorted}
             heroId={heroId}
+            layout={layout}
             onOpen={openDetail}
             onAdd={() => openEdit("new")}
             onMarkDone={markDone}

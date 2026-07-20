@@ -1,5 +1,5 @@
 import type { Activity } from "../domain/types";
-import { heroOf, sectionsOf } from "../domain/sections";
+import { heroOf, layoutOf, sectionsOf, type DayLayout } from "../domain/sections";
 import { ActivityRow } from "./ActivityRow";
 import { Hero } from "./Hero";
 import { Logo } from "./Logo";
@@ -10,6 +10,8 @@ interface DashboardProps {
   activities: Activity[];
   // The activity picked for today's banner; null falls back to the most urgent.
   heroId: string | null;
+  // The rows dealt for today; null falls back to dealing them on the spot.
+  layout: DayLayout | null;
   onOpen: (activity: Activity) => void;
   onAdd: () => void;
   // The banner acts on its activity in place, without opening its page.
@@ -20,6 +22,7 @@ interface DashboardProps {
 export function Dashboard({
   activities,
   heroId,
+  layout,
   onOpen,
   onAdd,
   onMarkDone,
@@ -28,7 +31,9 @@ export function Dashboard({
   // The banner's activity also keeps its card in the row below: a row heading
   // should never lie about how many activities have that status.
   const hero = heroOf(activities, undefined, heroId);
-  const sections = sectionsOf(activities);
+  // The layout arrives an effect later than the first render; dealing a throwaway
+  // one here keeps that frame from flashing a dashboard with no rows.
+  const sections = sectionsOf(activities, layout ?? layoutOf(activities));
 
   return (
     <div className={styles.dashboard}>

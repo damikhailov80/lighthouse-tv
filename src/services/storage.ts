@@ -1,4 +1,5 @@
 import type { Activity } from "../domain/types";
+import type { DayLayout } from "../domain/sections";
 
 // Bumped when stored records are no longer worth keeping. Reading a new key
 // makes the app fall back to the seed, which is how the illustrated activities
@@ -49,4 +50,23 @@ export function loadHeroPick(): HeroPick | null {
 
 export function saveHeroPick(pick: HeroPick): void {
   localStorage.setItem(HERO_KEY, JSON.stringify(pick));
+}
+
+// The rows the dashboard settled on, and the day they were dealt. Like the
+// banner's pick, this is a decision about the screen rather than about the data:
+// losing it costs nothing but a reshuffle.
+const LAYOUT_KEY = "lighthouse.layout.v1";
+
+export function loadDayLayout(): DayLayout | null {
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as DayLayout;
+  } catch {
+    return null;
+  }
+}
+
+export function saveDayLayout(layout: DayLayout): void {
+  localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
 }

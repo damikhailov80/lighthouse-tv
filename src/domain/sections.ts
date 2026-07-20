@@ -1,5 +1,5 @@
 import type { Activity, ActivityStatus } from "./types";
-import { remainingRatio, statusOf } from "./status";
+import { doneToday, remainingRatio, statusOf } from "./status";
 
 // One row of the dashboard carousel.
 export interface ActivitySection {
@@ -8,18 +8,29 @@ export interface ActivitySection {
   activities: Activity[];
 }
 
-// The rows, in the order they appear on screen. "Due soon" merges the two
-// middle statuses: on a TV three rows are as many as fit, and the difference
-// between "orange" and "yellow" is already carried by the card's own colour.
+// The rows as they were decided this morning: a heading and the activities that
+// belong to it, by id. Frozen for the day, because a dashboard that rearranges
+// itself under the remote is worse than one that is slightly out of date —
+// marking an activity done should turn its card green where it stands, not make
+// it jump to another row and take its heading down with it. Tomorrow the rows
+// are dealt again.
+export interface DayLayout {
+  day: string;
+  rows: { id: string; title: string; activityIds: string[] }[];
+}
+
+// The status rows, in the order they appear on screen. "Due soon" merges the two
+// middle statuses: on a TV a handful of rows are as many as fit, and the
+// difference between "orange" and "yellow" is already carried by the card's own
+// colour. There is no row for "green": an activity with plenty of time left is
+// not something the screen has to bring up, and it is still in "All activities".
 const GROUPS: { id: string; title: string; statuses: ActivityStatus[] }[] = [
   { id: "overdue", title: "Overdue", statuses: ["red"] },
   { id: "due-soon", title: "Due soon", statuses: ["orange", "yellow"] },
-  { id: "on-track", title: "On track", statuses: ["green"] },
 ];
 
-// A row with one or two cards in it is a heading paying for almost nothing and
-// leaves most of the screen empty, so those activities are shown only in the
-// "All activities" row at the bottom.
+// How many cards a status row needs before it earns a heading of its own, and
+// how many activities are suggested for the day.
 const MIN_ROW_SIZE = 3;
 
 // Most urgent first (overdue at the front, greenest at the back).
@@ -46,39 +57,84 @@ function shuffleKey(id: string, now: Date): number {
   return hash >>> 0;
 }
 
-// Three activities picked at random, so the screen has something to offer even
-// when nothing is urgent enough to fill a status row.
+// Three activities picked at random, so the screen always has something to
+// offer even when nothing is urgent enough to fill a status row. What has
+// already been done today is left out — it belongs in "Done today", not in an
+// offer to go and do it.
 function suggestionsOf(activities: Activity[], now: Date): Activity[] {
-  return [...activities]
+  return activities
+    .filter((activity) => !doneToday(activity, now))
     .sort((a, b) => shuffleKey(a.id, now) - shuffleKey(b.id, now))
     .slice(0, MIN_ROW_SIZE);
 }
 
-// Builds the rows of the dashboard, top to bottom: the status rows that have
-// enough cards to be worth a heading, then the daily suggestions, then
-// everything. An activity may appear in several rows — the rows are ways of
-// looking at the list, not a partition of it.
-export function sectionsOf(
-  activities: Activity[],
-  now: Date = new Date(),
-): ActivitySection[] {
+// Decides the day's rows: what to do today, what is late, what is about to be.
+// Called once a day; after that the result is stored and handed to sectionsOf,
+// so pressing "done" changes a card's colour and nothing else.
+export function layoutOf(activities: Activity[], now: Date = new Date()): DayLayout {
   const sorted = byUrgency(activities, now);
+  const rows: DayLayout["rows"] = [];
 
-  const sections = GROUPS.map(({ id, title, statuses }) => ({
-    id,
-    title,
-    activities: sorted.filter((activity) => statuses.includes(statusOf(activity, now))),
-  })).filter((section) => section.activities.length >= MIN_ROW_SIZE);
+  // A row with one or two cards is a heading paying for almost nothing and
+  // leaves most of the screen empty, so short rows are dropped; the activities
+  // in them are still reachable in "All activities". Applied here and only here:
+  // a row that opened the day above the threshold stays open all day, however
+  // many of its activities get done.
+  const add = (id: string, title: string, rowActivities: Activity[]) => {
+    if (rowActivities.length >= MIN_ROW_SIZE) {
+      rows.push({ id, title, activityIds: rowActivities.map((activity) => activity.id) });
+    }
+  };
 
-  const suggested = suggestionsOf(sorted, now);
-  if (suggested.length >= MIN_ROW_SIZE) {
-    sections.push({ id: "suggested", title: "Suggested for today", activities: suggested });
+  // First under the banner: the one row that answers "what now?" rather than
+  // reporting on the state of the list.
+  add("suggested", "Suggested for today", suggestionsOf(sorted, now));
+
+  for (const { id, title, statuses } of GROUPS) {
+    add(id, title, sorted.filter((activity) => statuses.includes(statusOf(activity, now))));
   }
 
-  // Always last and never dropped: it is the only row guaranteed to hold every
-  // activity, whatever the others decided to show.
+  return { day: dayKey(now), rows };
+}
+
+// Builds the rows of the dashboard, top to bottom: the day's frozen rows, then
+// everything, then what has been finished today. An activity may appear in
+// several rows — the rows are ways of looking at the list, not a partition of it.
+export function sectionsOf(
+  activities: Activity[],
+  layout: DayLayout,
+  now: Date = new Date(),
+): ActivitySection[] {
+  const byId = new Map(activities.map((activity) => [activity.id, activity]));
+  const sorted = byUrgency(activities, now);
+
+  // Deleted activities are the one thing that can still empty a frozen row, and
+  // a heading over nothing is worth dropping.
+  const sections: ActivitySection[] = layout.rows
+    .map(({ id, title, activityIds }) => ({
+      id,
+      title,
+      activities: activityIds
+        .map((activityId) => byId.get(activityId))
+        .filter((activity): activity is Activity => activity !== undefined),
+    }))
+    .filter((section) => section.activities.length > 0);
+
+  // Not frozen, and never dropped: it is the only row guaranteed to hold every
+  // activity — including the ones added since the layout was dealt — whatever
+  // the others decided to show.
   if (sorted.length > 0) {
     sections.push({ id: "all", title: "All activities", activities: sorted });
+  }
+
+  // The one row that has to answer to the present, and the only one cards are
+  // ever added to: it exists to fill up as the day is worked through, so it is
+  // recomputed rather than frozen. It only ever grows, so the row appears the
+  // moment the third activity is finished and then stays. Right at the bottom,
+  // since nothing in it is asking to be done.
+  const done = sorted.filter((activity) => doneToday(activity, now));
+  if (done.length >= MIN_ROW_SIZE) {
+    sections.push({ id: "done-today", title: "Done today", activities: done });
   }
 
   return sections;
