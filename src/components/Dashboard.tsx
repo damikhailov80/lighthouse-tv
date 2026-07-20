@@ -33,7 +33,7 @@ export function Dashboard({
   const hero = heroOf(activities, undefined, heroId);
   // The layout arrives an effect later than the first render; dealing a throwaway
   // one here keeps that frame from flashing a dashboard with no rows.
-  const sections = sectionsOf(activities, layout ?? layoutOf(activities));
+  const sections = sectionsOf(activities, layout ?? layoutOf(activities, undefined, heroId));
 
   return (
     <div className={styles.dashboard}>

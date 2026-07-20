@@ -8,11 +8,14 @@ import styles from "./ActivityCard.module.css";
 interface ActivityCardProps {
   activity: Activity;
   onOpen: (activity: Activity) => void;
+  // A row too short to fill the screen widens its cards; the extra width goes
+  // to the illustration, which then keeps a 16:9 frame instead of a fixed one.
+  wide?: boolean;
 }
 
 // The whole card is a single D-pad target: its actions live on the detail
 // page, so the remote never has to step through controls inside the grid.
-export function ActivityCard({ activity, onOpen }: ActivityCardProps) {
+export function ActivityCard({ activity, onOpen, wide = false }: ActivityCardProps) {
   // ActivityStatus values double as class names in status.module.css.
   const statusClass = status[statusOf(activity)];
   const progress = Math.round(progressFraction(activity) * 100);
@@ -20,7 +23,7 @@ export function ActivityCard({ activity, onOpen }: ActivityCardProps) {
 
   return (
     <button
-      className={`${styles.card} ${statusClass}`}
+      className={`${styles.card} ${statusClass}${wide ? ` ${styles.wide}` : ""}`}
       type="button"
       data-nav
       data-card-id={activity.id}

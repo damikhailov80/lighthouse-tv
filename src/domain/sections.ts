@@ -29,9 +29,15 @@ const GROUPS: { id: string; title: string; statuses: ActivityStatus[] }[] = [
   { id: "due-soon", title: "Due soon", statuses: ["orange", "yellow"] },
 ];
 
-// How many cards a status row needs before it earns a heading of its own, and
-// how many activities are suggested for the day.
-const MIN_ROW_SIZE = 3;
+// How many cards a row needs before it earns a heading of its own. A row that
+// does not fill the width of the screen leaves a heading standing over empty
+// space, and four normal cards are exactly what fills it.
+const MIN_ROW_SIZE = 4;
+
+// How many activities are suggested for the day. They are shown as wide cards,
+// already fill the screen three across — so the suggestions are exempt from
+// MIN_ROW_SIZE, like "All activities" but for the opposite reason.
+const SUGGESTION_COUNT = 3;
 
 // Most urgent first (overdue at the front, greenest at the back).
 function byUrgency(activities: Activity[], now: Date): Activity[] {
@@ -58,40 +64,66 @@ function shuffleKey(id: string, now: Date): number {
 }
 
 // Three activities picked at random, so the screen always has something to
-// offer even when nothing is urgent enough to fill a status row. What has
-// already been done today is left out — it belongs in "Done today", not in an
-// offer to go and do it.
-function suggestionsOf(activities: Activity[], now: Date): Activity[] {
-  return activities
-    .filter((activity) => !doneToday(activity, now))
-    .sort((a, b) => shuffleKey(a.id, now) - shuffleKey(b.id, now))
-    .slice(0, MIN_ROW_SIZE);
+// offer even when nothing is urgent enough to fill a status row.
+//
+// The banner's activity is never one of them: it is already the largest thing on
+// the screen, and repeating it directly underneath spends a suggestion on
+// something that was never in doubt. That is the one hard rule — everything else
+// gives way to filling the row. What has been done today is held back, because
+// it belongs in "Done today" rather than in an offer to go and do it, but on a
+// short list it is taken anyway: three cards of anything beat two cards and a
+// gap, and a finished activity shown again is only ever a mild repetition.
+function suggestionsOf(activities: Activity[], now: Date, heroId?: string): Activity[] {
+  const candidates = activities
+    .filter((activity) => activity.id !== heroId)
+    .sort((a, b) => shuffleKey(a.id, now) - shuffleKey(b.id, now));
+
+  const pending = candidates.filter((activity) => !doneToday(activity, now));
+  const done = candidates.filter((activity) => doneToday(activity, now));
+
+  return [...pending, ...done].slice(0, SUGGESTION_COUNT);
 }
 
 // Decides the day's rows: what to do today, what is late, what is about to be.
 // Called once a day; after that the result is stored and handed to sectionsOf,
 // so pressing "done" changes a card's colour and nothing else.
-export function layoutOf(activities: Activity[], now: Date = new Date()): DayLayout {
+// `heroId` is the banner's pick for the day, kept out of the suggestions;
+// resolved through heroOf so that passing nothing still excludes the activity
+// the banner is going to fall back to.
+export function layoutOf(
+  activities: Activity[],
+  now: Date = new Date(),
+  heroId: string | null = null,
+): DayLayout {
   const sorted = byUrgency(activities, now);
+  const hero = heroOf(activities, now, heroId);
   const rows: DayLayout["rows"] = [];
 
-  // A row with one or two cards is a heading paying for almost nothing and
-  // leaves most of the screen empty, so short rows are dropped; the activities
-  // in them are still reachable in "All activities". Applied here and only here:
-  // a row that opened the day above the threshold stays open all day, however
-  // many of its activities get done.
   const add = (id: string, title: string, rowActivities: Activity[]) => {
+    rows.push({ id, title, activityIds: rowActivities.map((activity) => activity.id) });
+  };
+
+  // A status row that does not fill the width is a heading paying for almost
+  // nothing, so short ones are dropped; the activities in them are still
+  // reachable in "All activities". Applied here and only here: a row that opened
+  // the day above the threshold stays open all day, however many of its
+  // activities get done.
+  const addIfFull = (id: string, title: string, rowActivities: Activity[]) => {
     if (rowActivities.length >= MIN_ROW_SIZE) {
-      rows.push({ id, title, activityIds: rowActivities.map((activity) => activity.id) });
+      add(id, title, rowActivities);
     }
   };
 
   // First under the banner: the one row that answers "what now?" rather than
-  // reporting on the state of the list.
-  add("suggested", "Suggested for today", suggestionsOf(sorted, now));
+  // reporting on the state of the list. It is always shown when it has anything
+  // to offer — its wide cards fill the screen on their own.
+  const suggestions = suggestionsOf(sorted, now, hero?.id);
+  if (suggestions.length > 0) {
+    add("suggested", "Suggested for today", suggestions);
+  }
 
   for (const { id, title, statuses } of GROUPS) {
-    add(id, title, sorted.filter((activity) => statuses.includes(statusOf(activity, now))));
+    addIfFull(id, title, sorted.filter((activity) => statuses.includes(statusOf(activity, now))));
   }
 
   return { day: dayKey(now), rows };
@@ -130,7 +162,7 @@ export function sectionsOf(
   // The one row that has to answer to the present, and the only one cards are
   // ever added to: it exists to fill up as the day is worked through, so it is
   // recomputed rather than frozen. It only ever grows, so the row appears the
-  // moment the third activity is finished and then stays. Right at the bottom,
+  // moment it can fill the width and then stays. Right at the bottom,
   // since nothing in it is asking to be done.
   const done = sorted.filter((activity) => doneToday(activity, now));
   if (done.length >= MIN_ROW_SIZE) {

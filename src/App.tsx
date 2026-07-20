@@ -115,8 +115,10 @@ export function App() {
   // into and only changes colour, and a row that was worth a heading this
   // morning keeps it even after everything in it has been finished. Re-dealt
   // when the day rolls over.
+  // Waits for the banner's pick: the suggestions are dealt around it, so dealing
+  // them first would offer the activity the banner is already showing.
   useEffect(() => {
-    if (activities.length === 0) return;
+    if (activities.length === 0 || heroId === null) return;
     const today = dayKey();
     if (layout?.day === today) return;
 
@@ -125,10 +127,10 @@ export function App() {
       setLayout(stored);
       return;
     }
-    const dealt = layoutOf(activities);
+    const dealt = layoutOf(activities, undefined, heroId);
     saveDayLayout(dealt);
     setLayout(dealt);
-  }, [activities, layout]);
+  }, [activities, layout, heroId]);
 
   // Give the D-pad a starting point by focusing the banner once the dashboard
   // has rendered its activities — it already features the most urgent one.

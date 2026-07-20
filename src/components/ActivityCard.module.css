@@ -3,9 +3,11 @@
 .card {
   display: flex;
   flex-direction: column;
-  /* Fixed width: inside the row's flex track a card must neither stretch to
-     fill a short row nor shrink to squeeze a long one in. */
-  flex: 0 0 300px;
+  /* Never shrinks: a long row scrolls instead of squeezing its cards. A short
+     row (three cards or fewer fit the screen) has slack left over, so the
+     cards share it and grow — capped, so two cards do not become billboards. */
+  flex: 1 0 300px;
+  max-width: 400px;
   min-height: 230px;
   /* Padding lives on .content so the illustration can run edge to edge. */
   padding: 0;
@@ -22,6 +24,13 @@
   text-align: left;
   cursor: pointer;
   overflow: hidden;
+}
+
+/* The wide card of a short row. It may outgrow the cap above, because with
+   three cards there is no scroll to hint at and the row has to reach the right
+   edge on its own; the ceiling only stops a lone card from spanning the wall. */
+.wide {
+  max-width: 640px;
 }
 
 /* Focus highlight — matches the outlined card in the design. */
@@ -46,6 +55,13 @@
   /* Crops the focus zoom to the frame. Without it the scaled image spills past
      the fade gradient below and shows up as a seam above the title. */
   overflow: hidden;
+}
+
+/* A fixed height would turn into a letterbox strip once the card is 500px
+   across, so the wide illustration is sized by ratio instead. */
+.wide .media {
+  height: auto;
+  aspect-ratio: 16 / 9;
 }
 
 .image {
