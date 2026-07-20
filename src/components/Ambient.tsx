@@ -104,6 +104,14 @@ export function Ambient() {
           ) : (
             <p className={styles.kicker}>No activities yet</p>
           )}
+
+          {/* Not a control — nothing here takes focus. The screensaver cannot be
+              navigated, so the one thing it can do has to be said in words.
+              AmbientDream turns OK into "open the app" and every other button
+              into "leave", which is what a screensaver is expected to do. */}
+          <p className={styles.hint}>
+            <span className={styles.key}>OK</span> to open
+          </p>
         </div>
       </div>
     </div>
