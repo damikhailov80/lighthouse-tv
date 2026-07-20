@@ -163,12 +163,14 @@ export function useSpatialNavigation() {
       // before the hold, so a caret is never held back by a scroll.
       if (inTextField && (direction === "left" || direction === "right")) return;
 
+      // From here on the arrow belongs to the navigation, never to the browser:
+      // its native scrolling would drift the page past the last row into the
+      // background even when there is nothing left to focus.
+      event.preventDefault();
+
       const axis: Axis =
         direction === "up" || direction === "down" ? "vertical" : "horizontal";
-      if (scrolling[axis]) {
-        event.preventDefault();
-        return;
-      }
+      if (scrolling[axis]) return;
 
       const current =
         active instanceof HTMLElement && active.hasAttribute("data-nav")
@@ -178,17 +180,19 @@ export function useSpatialNavigation() {
 
       // Nothing was focused yet: land on the first target.
       if (current !== active) {
-        event.preventDefault();
         current.focus();
         return;
       }
 
       const next = nextInDirection(current, direction);
       if (next) {
-        event.preventDefault();
         next.focus({ preventScroll: true });
         // Keep the newly focused control on screen without jumping the page.
         next.scrollIntoView({ block: "nearest", inline: "nearest" });
+        // A card alone means nothing: the row heading above it says which status
+        // these activities have. So the vertical position is set by the whole
+        // band, heading included, and only the sideways one by the card.
+        next.closest<HTMLElement>("[data-row]")?.scrollIntoView({ block: "nearest" });
         holdUntilScrollSettles(axis, next);
       }
     };
