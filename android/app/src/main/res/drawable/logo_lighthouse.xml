@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The brand mark, kept in step with src/components/Logo.tsx (same 64x64
+     viewport and the same path data). Transparent background: the launcher
+     icon and the TV banner layer it over their own cream field. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- Beams. The gradient stops need literal colours (a colour resource
+         cannot carry the fade to transparent), so they repeat logo_beam. -->
+    <path android:pathData="M24,15 v9 L1,30 V9 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="1" android:startY="0"
+                android:endX="24" android:endY="0">
+                <item android:offset="0" android:color="#00F0CD72" />
+                <item android:offset="1" android:color="#FFF0CD72" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M40,15 v9 L63,30 V9 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="63" android:startY="0"
+                android:endX="40" android:endY="0">
+                <item android:offset="0" android:color="#00F0CD72" />
+                <item android:offset="1" android:color="#FFF0CD72" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Finial, roof, eave, lantern frame, gallery, tower and base. -->
+    <path
+        android:fillColor="@color/logo_navy"
+        android:pathData="M31.1,2.5 h1.8 v4.5 h-1.8 z
+                          M32,5.5 L45,14.5 H19 z
+                          M18,13.5 h28 v2.2 H18 z
+                          M24,15.5 h16 v8 H24 z
+                          M21,23 h22 v5 H21 z
+                          M25,28 h14 l6,27.5 H19 z
+                          M13,55 h38 v3.6 H13 z" />
+
+    <!-- Lantern panes. -->
+    <path
+        android:fillColor="@color/logo_glass"
+        android:pathData="M25.5,17 h3.5 v5 h-3.5 z
+                          M30.25,17 h3.5 v5 h-3.5 z
+                          M35,17 h3.5 v5 H35 z" />
+
+    <!-- Stripes: straight bands cut to the shape of the tower. -->
+    <group>
+        <clip-path android:pathData="M25,28 h14 l6,27.5 H19 z" />
+        <path
+            android:fillColor="@color/logo_glass"
+            android:pathData="M14,44 L50,18 v8 L14,52 z
+                              M14,60 L50,34 v8 L14,68 z" />
+    </group>
+</vector>

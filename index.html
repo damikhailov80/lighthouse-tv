@@ -6,6 +6,14 @@
          which would collapse the grid. Laying out at 1280 and letting the
          WebView scale it to the panel keeps the design identical on any TV. -->
     <meta name="viewport" content="width=1280" />
+    <!-- The mark from src/components/Logo.tsx, inlined as a data URI: the build
+         ships one self-contained index.html, so the icon cannot be a separate
+         file. Beams are flat here (no gradient) — at 16px it reads better, and
+         the colours must be literals since tokens.css is not loaded yet. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2064%2064%27%3E%3Cpath%20d=%27M24%2015v9L1%2030V9Z%27%20fill=%27%23f0cd72%27%20opacity=%27.55%27/%3E%3Cpath%20d=%27M40%2015v9l23%206V9Z%27%20fill=%27%23f0cd72%27%20opacity=%27.55%27/%3E%3Cg%20fill=%27%231a2436%27%3E%3Cpath%20d=%27M31.1%202.5h1.8v4.5h-1.8zM32%205.5%2045%2014.5H19ZM18%2013.5h28v2.2H18zM24%2015.5h16v8H24zM21%2023h22v5H21zM25%2028h14l6%2027.5H19ZM13%2055h38v3.6H13z%27/%3E%3C/g%3E%3Cg%20fill=%27%23f6ead2%27%3E%3Cpath%20d=%27M25.5%2017h3.5v5h-3.5zM30.25%2017h3.5v5h-3.5zM35%2017h3.5v5H35z%27/%3E%3C/g%3E%3Cg%20fill=%27%23f6ead2%27%20clip-path=%27url(%23t)%27%3E%3Cpath%20d=%27M14%2044%2050%2018v8L14%2052ZM14%2060%2050%2034v8L14%2068Z%27/%3E%3C/g%3E%3CclipPath%20id=%27t%27%3E%3Cpath%20d=%27M25%2028h14l6%2027.5H19Z%27/%3E%3C/clipPath%3E%3C/svg%3E"
+    />
     <title>Lighthouse</title>
   </head>
   <body>

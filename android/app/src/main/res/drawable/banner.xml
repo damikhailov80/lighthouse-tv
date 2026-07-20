@@ -1,17 +1,15 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="320dp"
-    android:height="180dp"
-    android:viewportWidth="320"
-    android:viewportHeight="180">
-    <!-- Cream background -->
-    <path
-        android:fillColor="#F4ECDB"
-        android:pathData="M0,0h320v180h-320z" />
-    <!-- Terracotta ring on the left -->
-    <path
-        android:fillColor="#BD7539"
-        android:pathData="M32,90 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0 Z" />
-    <path
-        android:fillColor="#F4ECDB"
-        android:pathData="M46,90 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z" />
-</vector>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Leanback launcher banner. The insets both centre the 140dp mark and give
+     the layer list its intrinsic 320x180dp: 90+140+90 by 20+140+20. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/cream" />
+    <item
+        android:drawable="@drawable/logo_lighthouse"
+        android:gravity="center"
+        android:width="140dp"
+        android:height="140dp"
+        android:left="90dp"
+        android:top="20dp"
+        android:right="90dp"
+        android:bottom="20dp" />
+</layer-list>

@@ -1,17 +1,15 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <!-- Cream background -->
-    <path
-        android:fillColor="#F4ECDB"
-        android:pathData="M0,0h108v108h-108z" />
-    <!-- Terracotta ring (the "lighthouse light") -->
-    <path
-        android:fillColor="#BD7539"
-        android:pathData="M30,54 a24,24 0 1,0 48,0 a24,24 0 1,0 -48,0 Z" />
-    <path
-        android:fillColor="#F4ECDB"
-        android:pathData="M42,54 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0 Z" />
-</vector>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon: the mark on a cream field, 84dp inside the 108dp square so
+     it stays clear of the rounding launchers apply. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/cream" />
+    <item
+        android:drawable="@drawable/logo_lighthouse"
+        android:gravity="center"
+        android:width="84dp"
+        android:height="84dp"
+        android:left="12dp"
+        android:top="12dp"
+        android:right="12dp"
+        android:bottom="12dp" />
+</layer-list>

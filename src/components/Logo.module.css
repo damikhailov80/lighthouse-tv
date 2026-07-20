@@ -1,0 +1,24 @@
+.logo {
+  display: block;
+  /* Square by viewBox; the height comes from whoever places the mark. */
+  height: 100%;
+  width: auto;
+}
+
+.tower {
+  fill: var(--palette-ink-900);
+}
+
+.glass {
+  fill: var(--palette-cream-50);
+}
+
+.beamStart {
+  stop-color: var(--palette-amber-300);
+  stop-opacity: 1;
+}
+
+.beamEnd {
+  stop-color: var(--palette-amber-300);
+  stop-opacity: 0;
+}

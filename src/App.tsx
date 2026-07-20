@@ -19,6 +19,14 @@ const DEPTH_DASHBOARD = 0;
 const DEPTH_DETAIL = 1;
 const DEPTH_DIALOG = 2;
 
+// URLs are hashes: the app is served from file:// inside the Android WebView,
+// where pushing a path would throw. They are cosmetic — the history state's
+// depth, not the hash, is what drives the UI.
+const hashForDashboard = () => "#/";
+const hashForDetail = (id: string) => `#/activity/${id}`;
+const hashForEdit = (target: Activity | "new") =>
+  target === "new" ? "#/activity/new" : `#/activity/${target.id}/edit`;
+
 export function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -32,6 +40,9 @@ export function App() {
   useEffect(() => {
     const stored = loadActivities();
     setActivities(stored.length > 0 ? stored : seedActivities());
+    // A reload can leave a deep-link hash with no history behind it, which
+    // would make BACK quit the app. Start every session on the dashboard.
+    history.replaceState({ depth: DEPTH_DASHBOARD }, "", hashForDashboard());
   }, []);
 
   // Give the D-pad a starting point by focusing the first card once the
@@ -94,12 +105,12 @@ export function App() {
   const openDetail = (activity: Activity) => {
     lastOpenedId.current = activity.id;
     setSelectedId(activity.id);
-    history.pushState({ depth: DEPTH_DETAIL }, "");
+    history.pushState({ depth: DEPTH_DETAIL }, "", hashForDetail(activity.id));
   };
 
   const openEdit = (target: Activity | "new") => {
     setEditTarget(target);
-    history.pushState({ depth: DEPTH_DIALOG }, "");
+    history.pushState({ depth: DEPTH_DIALOG }, "", hashForEdit(target));
   };
 
   // Persist and update state in one place so storage never drifts from UI.
@@ -163,16 +174,20 @@ export function App() {
 
   return (
     <>
-      {selected ? (
-        <ActivityDetail
-          activity={selected}
-          onMarkDone={markDone}
-          onEdit={openEdit}
-          onBack={() => history.back()}
-        />
-      ) : (
-        <Dashboard activities={sorted} onOpen={openDetail} onAdd={() => openEdit("new")} />
-      )}
+      {/* While the dialog is open the page behind it is inert: not focusable,
+          not clickable and skipped by screen readers. */}
+      <div inert={editTarget !== null}>
+        {selected ? (
+          <ActivityDetail
+            activity={selected}
+            onMarkDone={markDone}
+            onEdit={openEdit}
+            onBack={() => history.back()}
+          />
+        ) : (
+          <Dashboard activities={sorted} onOpen={openDetail} onAdd={() => openEdit("new")} />
+        )}
+      </div>
       {editTarget && (
         <EditActivityDialog
           target={editTarget}

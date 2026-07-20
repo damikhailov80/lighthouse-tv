@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Activity, ActivityImage, PeriodUnit } from "../domain/types";
 import { ACTIVITY_IMAGES } from "../assets/images";
 import buttons from "../styles/Button.module.css";
@@ -36,6 +36,17 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
 
   const canSave = title.trim().length > 0 && every > 0;
 
+  // Send focus back where it came from when the dialog closes, so the remote
+  // resumes from the button that opened it instead of from nowhere.
+  const openerRef = useRef(document.activeElement);
+  useEffect(() => {
+    const opener = openerRef.current;
+    return () => {
+      // The opener is gone after a delete; App then restores focus itself.
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+    };
+  }, []);
+
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!canSave) return;
@@ -50,13 +61,20 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
 
   return (
     // Click on the backdrop closes; clicks inside the panel are stopped.
-    <div className={styles.overlay} onClick={onClose}>
+    // `data-overlay` is the navigation contract that confines the D-pad to the
+    // dialog — see useSpatialNavigation.
+    <div className={styles.overlay} data-overlay onClick={onClose}>
       <form
         className={styles.dialog}
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-dialog-title"
       >
-        <h2 className={styles.title}>{isNew ? "New activity" : "Edit activity"}</h2>
+        <h2 className={styles.title} id="edit-dialog-title">
+          {isNew ? "New activity" : "Edit activity"}
+        </h2>
 
         <label className={styles.field}>
           <span className={styles.label}>Title</span>
@@ -103,16 +121,6 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
         <div className={styles.field}>
           <span className={styles.label}>Illustration</span>
           <div className={styles.picker}>
-            <button
-              type="button"
-              data-nav
-              className={image === undefined ? styles.tileEmptySelected : styles.tileEmpty}
-              aria-label="No illustration"
-              aria-pressed={image === undefined}
-              onClick={() => setImage(undefined)}
-            >
-              None
-            </button>
             {ACTIVITY_IMAGES.map((option) => (
               <button
                 key={option.key}

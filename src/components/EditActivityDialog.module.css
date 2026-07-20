@@ -118,25 +118,6 @@
 
 /* The "no illustration" tile. Carries a visible word rather than an empty
    swatch: from across a room an unlabelled blank tile reads as a bug. */
-.tileEmpty {
-  composes: tile;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-color: var(--color-border);
-  background: transparent;
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-}
-
-.tileEmptySelected {
-  composes: tileEmpty;
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: var(--color-text-inverted);
-}
-
 .actions {
   display: flex;
   gap: var(--space-2);

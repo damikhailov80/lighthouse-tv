@@ -1,5 +1,6 @@
 import type { Activity } from "../domain/types";
 import { ActivityList } from "./ActivityList";
+import { Logo } from "./Logo";
 import buttons from "../styles/Button.module.css";
 import styles from "./Dashboard.module.css";
 
@@ -14,7 +15,7 @@ export function Dashboard({ activities, onOpen, onAdd }: DashboardProps) {
     <div className={styles.dashboard}>
       <header className={styles.header}>
         <div className={styles.brand}>
-          <span className={styles.logo} aria-hidden="true" />
+          <Logo className={styles.logo} />
           <h1 className={styles.title}>Lighthouse</h1>
         </div>
         <button className={buttons.primary} type="button" data-nav onClick={onAdd}>

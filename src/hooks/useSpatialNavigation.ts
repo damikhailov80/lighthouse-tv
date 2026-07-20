@@ -10,9 +10,12 @@ const KEY_TO_DIRECTION: Record<string, Direction> = {
 };
 
 // When a dialog overlay is open, navigation is confined to it so the remote
-// cannot jump to the dashboard controls hidden behind the backdrop.
+// cannot jump to the controls hidden behind the backdrop. Matched by data
+// attribute: class names are hashed by CSS Modules and are not stable
+// selectors. The last overlay wins if several are ever stacked.
 function navRoot(): ParentNode {
-  return document.querySelector(".overlay") ?? document;
+  const overlays = document.querySelectorAll<HTMLElement>("[data-overlay]");
+  return overlays[overlays.length - 1] ?? document;
 }
 
 // All visible, enabled elements that opt into D-pad navigation.

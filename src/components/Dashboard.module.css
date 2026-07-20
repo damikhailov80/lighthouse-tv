@@ -18,12 +18,9 @@
   gap: var(--space-3);
 }
 
-/* Ring "lighthouse light" mark next to the title. */
+/* The lighthouse mark next to the title, sized to the cap height of the type. */
 .logo {
-  width: var(--space-6);
-  height: var(--space-6);
-  border-radius: 50%;
-  border: 6px solid var(--color-accent);
+  height: var(--space-8);
 }
 
 .title {
