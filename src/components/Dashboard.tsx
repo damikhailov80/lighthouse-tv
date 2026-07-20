@@ -1,5 +1,7 @@
 import type { Activity } from "../domain/types";
 import { ActivityList } from "./ActivityList";
+import buttons from "../styles/Button.module.css";
+import styles from "./Dashboard.module.css";
 
 interface DashboardProps {
   activities: Activity[];
@@ -9,13 +11,13 @@ interface DashboardProps {
 
 export function Dashboard({ activities, onOpen, onAdd }: DashboardProps) {
   return (
-    <div className="dashboard">
-      <header className="dashboard__header">
-        <div className="dashboard__brand">
-          <span className="dashboard__logo" aria-hidden="true" />
-          <h1 className="dashboard__title">Lighthouse</h1>
+    <div className={styles.dashboard}>
+      <header className={styles.header}>
+        <div className={styles.brand}>
+          <span className={styles.logo} aria-hidden="true" />
+          <h1 className={styles.title}>Lighthouse</h1>
         </div>
-        <button className="button button--primary" type="button" data-nav onClick={onAdd}>
+        <button className={buttons.primary} type="button" data-nav onClick={onAdd}>
           Add activity
         </button>
       </header>

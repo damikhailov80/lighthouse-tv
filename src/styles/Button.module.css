@@ -1,0 +1,42 @@
+/* Shared button styles, used by every component that renders a control. */
+
+.button {
+  padding: var(--space-2) var(--space-5);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary {
+  composes: button;
+  background: var(--color-accent);
+  color: var(--color-text-inverted);
+}
+
+.primary:not(:disabled):hover,
+.primary:focus-visible {
+  background: var(--color-accent-hover);
+  outline: none;
+}
+
+.ghost {
+  composes: button;
+  background: transparent;
+  color: var(--color-text);
+  border: var(--border-width-control) solid var(--color-border);
+}
+
+.danger {
+  composes: button;
+  background: transparent;
+  color: var(--color-status-red);
+  border: var(--border-width-control) solid var(--color-status-red);
+}

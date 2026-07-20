@@ -1,0 +1,80 @@
+/* The card is one big button: selecting it opens the activity page, where its
+   actions live. Nothing inside it is focusable. */
+.card {
+  display: flex;
+  flex-direction: column;
+  min-height: 230px;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-surface);
+  border: var(--border-width-focus) solid transparent;
+  border-radius: var(--radius-lg);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Focus highlight — matches the outlined card in the design. */
+.card:focus {
+  border-color: var(--color-accent);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dot {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 50%;
+  background: var(--color-status);
+}
+
+.title {
+  display: block;
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.footer {
+  display: block;
+  margin-top: auto;
+}
+
+.progress {
+  display: block;
+  height: 8px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-track);
+  overflow: hidden;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-status);
+  transition: width var(--duration-slow) ease;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-md);
+}
+
+.due {
+  composes: urgentText from "../styles/status.module.css";
+  font-weight: 600;
+}
+
+.period {
+  color: var(--color-text-muted);
+}

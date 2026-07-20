@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import type { Activity, PeriodUnit } from "../domain/types";
+import buttons from "../styles/Button.module.css";
+import styles from "./EditActivityDialog.module.css";
 
 // Data returned when saving. `id` is absent for a brand-new activity.
 export interface ActivityDraft {
@@ -44,14 +46,18 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
 
   return (
     // Click on the backdrop closes; clicks inside the panel are stopped.
-    <div className="overlay" onClick={onClose}>
-      <form className="dialog" onClick={(event) => event.stopPropagation()} onSubmit={handleSubmit}>
-        <h2 className="dialog__title">{isNew ? "New activity" : "Edit activity"}</h2>
+    <div className={styles.overlay} onClick={onClose}>
+      <form
+        className={styles.dialog}
+        onClick={(event) => event.stopPropagation()}
+        onSubmit={handleSubmit}
+      >
+        <h2 className={styles.title}>{isNew ? "New activity" : "Edit activity"}</h2>
 
-        <label className="field">
-          <span className="field__label">Title</span>
+        <label className={styles.field}>
+          <span className={styles.label}>Title</span>
           <input
-            className="field__input"
+            className={styles.input}
             type="text"
             data-nav
             value={title}
@@ -61,11 +67,11 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
           />
         </label>
 
-        <div className="field">
-          <span className="field__label">Repeat every</span>
-          <div className="period-row">
+        <div className={styles.field}>
+          <span className={styles.label}>Repeat every</span>
+          <div className={styles.periodRow}>
             <input
-              className="field__input period-row__count"
+              className={styles.count}
               type="number"
               data-nav
               min={1}
@@ -73,13 +79,13 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
               value={every}
               onChange={(event) => setEvery(Number(event.target.value))}
             />
-            <div className="segmented">
+            <div className={styles.segmented}>
               {UNITS.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   data-nav
-                  className={`segmented__option${unit === option.value ? " is-active" : ""}`}
+                  className={unit === option.value ? styles.optionActive : styles.option}
                   aria-pressed={unit === option.value}
                   onClick={() => setUnit(option.value)}
                 >
@@ -90,21 +96,21 @@ export function EditActivityDialog({ target, onSave, onDelete, onClose }: EditAc
           </div>
         </div>
 
-        <div className="dialog__actions">
+        <div className={styles.actions}>
           {!isNew && (
             <button
               type="button"
-              className="button button--danger"
+              className={buttons.danger}
               data-nav
               onClick={() => onDelete(target.id)}
             >
               Delete
             </button>
           )}
-          <button type="button" className="button button--ghost" data-nav onClick={onClose}>
+          <button type="button" className={buttons.ghost} data-nav onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="button button--primary" data-nav disabled={!canSave}>
+          <button type="submit" className={buttons.primary} data-nav disabled={!canSave}>
             Save
           </button>
         </div>

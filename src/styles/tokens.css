@@ -1,0 +1,111 @@
+/* Design tokens.
+   The palette is sampled from the illustrations in /assets: a warm retro-flat
+   set built on cream paper, mustard, forest green, terracotta and deep navy.
+   Nothing else in the project may hard-code a colour — always use a token. */
+
+:root {
+  /* ---------- Palette (raw brand colours) ---------- */
+
+  /* Paper / sand — the lit background of every illustration. */
+  --palette-cream-50: #fbf4e7;
+  --palette-cream-100: #f6ead2;
+  --palette-cream-200: #ecdfc3;
+  --palette-cream-300: #e8dcc1;
+  --palette-cream-400: #ded0ae;
+  --palette-sand-500: #c9b78a;
+
+  /* Mustard / amber — armchairs, jackets, lamplight. */
+  --palette-amber-300: #f0cd72;
+  --palette-amber-500: #e0a62a;
+  --palette-amber-600: #c98a1e;
+
+  /* Terracotta / rust — pots, ottomans, autumn trees. */
+  --palette-terracotta-400: #d0794a;
+  --palette-terracotta-500: #bc5f2c;
+  --palette-terracotta-600: #8a421e;
+
+  /* Forest green — foliage, plaid shirts, lawns. */
+  --palette-green-400: #6f8f4e;
+  --palette-green-500: #4b7245;
+  --palette-green-700: #2a4e42;
+
+  /* Blue / ink — evening walls, denim, the TV screen. */
+  --palette-blue-300: #9dbccb;
+  --palette-blue-500: #4d7d96;
+  --palette-ink-800: #2c2a27;
+  --palette-ink-900: #1a2436;
+
+  /* ---------- Semantic colour tokens ---------- */
+
+  --color-bg-top: var(--palette-cream-100);
+  --color-bg-bottom: var(--palette-cream-200);
+  /* Cards sit one step darker than the background so they read as paper on
+     paper without needing a shadow. */
+  --color-surface: var(--palette-cream-300);
+  --color-surface-raised: var(--palette-cream-50);
+
+  --color-text: var(--palette-ink-800);
+  --color-text-muted: #9c9486;
+  --color-text-inverted: var(--palette-cream-50);
+
+  --color-accent: var(--palette-terracotta-500);
+  --color-accent-hover: var(--palette-terracotta-600);
+  --color-border: var(--palette-cream-400);
+  --color-focus-ring: rgba(188, 95, 44, 0.65);
+
+  /* Traffic-light status scale, warmed up to sit inside the palette. */
+  --color-status-green: var(--palette-green-500);
+  --color-status-yellow: var(--palette-amber-500);
+  --color-status-orange: var(--palette-terracotta-400);
+  --color-status-red: #b74b3a;
+
+  /* Accent of the currently rendered status. Components set this on their root
+     element (see status.module.css) and their parts read it, so a dot and a
+     progress bar never have to know which status they belong to. */
+  --color-status: var(--color-text-muted);
+
+  /* Tinted overlays derived from the ink colour. */
+  --color-track: rgba(60, 45, 25, 0.12);
+  --color-scrim: rgba(30, 25, 18, 0.55);
+
+  /* ---------- Typography ---------- */
+
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Heavy retro serif; falls back to a bold serif until a real display font is
+     bundled (a font file is a new asset that needs explicit sign-off). */
+  --font-display: "Cooper Black", "Arvo", Georgia, "Times New Roman", serif;
+
+  --font-size-sm: 1rem;
+  --font-size-md: 1.05rem;
+  --font-size-lg: 1.3rem;
+  --font-size-xl: 1.6rem;
+  --font-size-2xl: 2.4rem;
+  --font-size-3xl: 3rem;
+
+  /* ---------- Spacing ---------- */
+
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.25rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* Safe area for the TV: keeps content off the bezel on a 1280x720 screen. */
+  --space-screen-y: 3vh;
+  --space-screen-x: 3vw;
+
+  /* ---------- Radii, borders, motion ---------- */
+
+  --radius-md: 12px;
+  --radius-lg: 1.25rem;
+  --radius-xl: 1.5rem;
+  --radius-pill: 999px;
+
+  --border-width-focus: 3px;
+  --border-width-control: 2px;
+
+  --duration-fast: 0.15s;
+  --duration-slow: 0.3s;
+}

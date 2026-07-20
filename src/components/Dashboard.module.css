@@ -1,0 +1,35 @@
+/* Tuned so the whole 3x2 grid fits a 1280x720 TV screen without scrolling. */
+.dashboard {
+  min-height: 100vh;
+  padding: var(--space-screen-y) var(--space-screen-x);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Ring "lighthouse light" mark next to the title. */
+.logo {
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: 50%;
+  border: 6px solid var(--color-accent);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--font-size-2xl);
+  letter-spacing: 0.01em;
+}

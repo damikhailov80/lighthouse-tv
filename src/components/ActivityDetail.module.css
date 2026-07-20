@@ -1,0 +1,70 @@
+.detail {
+  min-height: 100vh;
+  padding: var(--space-screen-y) var(--space-screen-x);
+}
+
+.header {
+  display: flex;
+  margin-bottom: 4vh;
+}
+
+/* One centred column so the remote only ever moves up and down here. */
+.body {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.dot {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--color-status);
+}
+
+.title {
+  margin: var(--space-3) 0 var(--space-6);
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.progress {
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-track);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-status);
+  transition: width var(--duration-slow) ease;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: 1.2rem;
+  color: var(--color-text-muted);
+}
+
+.due {
+  composes: urgentText from "../styles/status.module.css";
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+
+.action {
+  padding: 1.1rem var(--space-5);
+  font-size: var(--font-size-lg);
+}

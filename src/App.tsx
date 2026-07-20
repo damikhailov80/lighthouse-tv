@@ -39,8 +39,10 @@ export function App() {
   useEffect(() => {
     if (didInitialFocus.current || activities.length === 0) return;
     didInitialFocus.current = true;
+    // Matched by data attribute, not by class: class names are hashed by CSS
+    // Modules and are not stable selectors.
     const start =
-      document.querySelector<HTMLElement>(".card") ??
+      document.querySelector<HTMLElement>("[data-card-id]") ??
       document.querySelector<HTMLElement>("[data-nav]");
     start?.focus();
   }, [activities]);

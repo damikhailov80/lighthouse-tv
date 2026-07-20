@@ -1,0 +1,26 @@
+/* The only global stylesheet: reset plus document-level defaults.
+   Everything else lives in a *.module.css next to its component. */
+
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: linear-gradient(160deg, var(--color-bg-top), var(--color-bg-bottom));
+  background-attachment: fixed;
+}
+
+/* D-pad / keyboard focus ring.
+   Uses :focus (not :focus-visible) so the ring is always shown for remote
+   navigation, where there is no mouse to disambiguate. Global because
+   [data-nav] is a cross-component navigation contract, not a component style. */
+[data-nav]:focus {
+  outline: none;
+  box-shadow: 0 0 0 var(--border-width-focus) var(--color-focus-ring);
+}

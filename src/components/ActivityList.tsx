@@ -1,5 +1,6 @@
 import type { Activity } from "../domain/types";
 import { ActivityCard } from "./ActivityCard";
+import styles from "./ActivityList.module.css";
 
 interface ActivityListProps {
   activities: Activity[];
@@ -8,7 +9,7 @@ interface ActivityListProps {
 
 export function ActivityList({ activities, onOpen }: ActivityListProps) {
   return (
-    <div className="activity-list">
+    <div className={styles.list}>
       {activities.map((activity) => (
         <ActivityCard key={activity.id} activity={activity} onOpen={onOpen} />
       ))}

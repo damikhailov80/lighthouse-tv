@@ -1,0 +1,29 @@
+/* Shared status modifiers. A component puts one of these on its root element;
+   its parts then read --color-status instead of knowing the status themselves. */
+
+.green {
+  --color-status: var(--color-status-green);
+}
+
+.yellow {
+  --color-status: var(--color-status-yellow);
+}
+
+.orange {
+  --color-status: var(--color-status-orange);
+}
+
+.red {
+  --color-status: var(--color-status-red);
+}
+
+/* Green and yellow are the calm states, so only the urgent ones tint their
+   remaining-time text; parts opt in by composing this class. */
+.urgentText {
+  color: var(--color-text-muted);
+}
+
+.orange .urgentText,
+.red .urgentText {
+  color: var(--color-status);
+}

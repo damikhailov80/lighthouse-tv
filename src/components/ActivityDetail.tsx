@@ -2,6 +2,9 @@ import { useEffect, useRef } from "react";
 import type { Activity } from "../domain/types";
 import { daysSinceLastDone, progressFraction, statusOf } from "../domain/status";
 import { dueLabel, periodShort } from "../domain/format";
+import buttons from "../styles/Button.module.css";
+import status from "../styles/status.module.css";
+import styles from "./ActivityDetail.module.css";
 
 interface ActivityDetailProps {
   activity: Activity;
@@ -13,7 +16,8 @@ interface ActivityDetailProps {
 // Full-screen page for a single activity. This is the only place the
 // per-activity actions live, so the dashboard grid stays a flat list of cards.
 export function ActivityDetail({ activity, onMarkDone, onEdit, onBack }: ActivityDetailProps) {
-  const status = statusOf(activity);
+  // ActivityStatus values double as class names in status.module.css.
+  const statusClass = status[statusOf(activity)];
   const progress = Math.round(progressFraction(activity) * 100);
   const sinceDone = daysSinceLastDone(activity);
   const firstAction = useRef<HTMLButtonElement>(null);
@@ -24,33 +28,31 @@ export function ActivityDetail({ activity, onMarkDone, onEdit, onBack }: Activit
   }, []);
 
   return (
-    <div className={`detail status-${status}`}>
-      <header className="detail__header">
-        <button className="button button--ghost" type="button" data-nav onClick={onBack}>
+    <div className={`${styles.detail} ${statusClass}`}>
+      <header className={styles.header}>
+        <button className={buttons.ghost} type="button" data-nav onClick={onBack}>
           Back
         </button>
       </header>
 
-      <div className="detail__body">
-        <span className="detail__dot" aria-hidden="true" />
-        <h1 className="detail__title">{activity.title}</h1>
+      <div className={styles.body}>
+        <span className={styles.dot} aria-hidden="true" />
+        <h1 className={styles.title}>{activity.title}</h1>
 
-        <div className="detail__progress" aria-hidden="true">
-          <div className="detail__progress-fill" style={{ width: `${progress}%` }} />
+        <div className={styles.progress} aria-hidden="true">
+          <div className={styles.progressFill} style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="detail__stats">
-          <span className="detail__due">{dueLabel(activity)}</span>
-          <span className="detail__period">{periodShort(activity)}</span>
-          <span className="detail__since">
-            {sinceDone === 0 ? "Done today" : `Done ${sinceDone}d ago`}
-          </span>
+        <div className={styles.stats}>
+          <span className={styles.due}>{dueLabel(activity)}</span>
+          <span>{periodShort(activity)}</span>
+          <span>{sinceDone === 0 ? "Done today" : `Done ${sinceDone}d ago`}</span>
         </div>
 
-        <div className="detail__actions">
+        <div className={styles.actions}>
           <button
             ref={firstAction}
-            className="button button--primary"
+            className={`${buttons.primary} ${styles.action}`}
             type="button"
             data-nav
             onClick={() => onMarkDone(activity.id)}
@@ -58,7 +60,7 @@ export function ActivityDetail({ activity, onMarkDone, onEdit, onBack }: Activit
             Mark as done
           </button>
           <button
-            className="button button--ghost"
+            className={`${buttons.ghost} ${styles.action}`}
             type="button"
             data-nav
             onClick={() => onEdit(activity)}
