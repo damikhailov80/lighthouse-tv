@@ -1,0 +1,30 @@
+{
+  "name": "lighthouse-tv",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tv:build": "bash android/sync-web.sh && cd android && ./gradlew assembleDebug",
+    "tv:connect": "adb connect ${TV_IP:-192.168.1.11}:5555",
+    "tv:upload": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "tv:run": "adb shell am start -n com.lighthouse.tv/.MainActivity",
+    "tv:deploy": "npm run tv:build && npm run tv:upload && npm run tv:run",
+    "tv:devices": "adb devices -l",
+    "tv:logs": "adb logcat -s chromium:E chromium:W AndroidRuntime:E"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.3.3"
+  }
+}

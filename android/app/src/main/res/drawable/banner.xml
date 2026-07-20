@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Cream background -->
+    <path
+        android:fillColor="#F4ECDB"
+        android:pathData="M0,0h320v180h-320z" />
+    <!-- Terracotta ring on the left -->
+    <path
+        android:fillColor="#BD7539"
+        android:pathData="M32,90 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0 Z" />
+    <path
+        android:fillColor="#F4ECDB"
+        android:pathData="M46,90 a14,14 0 1,0 28,0 a14,14 0 1,0 -28,0 Z" />
+</vector>

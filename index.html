@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Fixed layout width: Android TV WebView reports a ~960px CSS viewport,
+         which would collapse the grid. Laying out at 1280 and letting the
+         WebView scale it to the panel keeps the design identical on any TV. -->
+    <meta name="viewport" content="width=1280" />
+    <title>Lighthouse</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

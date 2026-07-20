@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <!-- Cream background avoids a white flash before the web view paints. -->
+        <item name="android:windowBackground">@color/cream</item>
+    </style>
+</resources>
