@@ -47,20 +47,25 @@
   gap: var(--space-3);
 }
 
+/* Sized off the title rather than in absolute units, so it keeps reading as a
+   part of the heading instead of a stray speck next to it. */
 .dot {
   flex: 0 0 auto;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: calc(var(--font-size-3xl) * 0.5);
+  height: calc(var(--font-size-3xl) * 0.5);
   border-radius: 50%;
   background: var(--color-status);
+  /* Baseline-aligned, then lifted onto the title's optical centre. */
+  transform: translateY(calc(var(--font-size-3xl) * -0.1));
 }
 
+/* Same type as a card title, only larger: the display serif is the brand's
+   voice in the header and does not belong on an activity's name. */
 .title {
   margin: 0;
-  font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 600;
   font-size: var(--font-size-3xl);
-  line-height: 1.1;
+  line-height: 1.15;
 }
 
 .stats {
@@ -73,6 +78,14 @@
 .due {
   composes: urgentText from "../styles/status.module.css";
   font-weight: 600;
+}
+
+/* Takes the place of the remaining-time line once the activity is done. Green
+   on its own account, not through --color-status: a daily activity is due again
+   tomorrow and may already be amber, but it is still finished for today. */
+.done {
+  font-weight: 700;
+  color: var(--color-status-green);
 }
 
 .period {

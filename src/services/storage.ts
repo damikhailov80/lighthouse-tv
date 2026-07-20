@@ -26,3 +26,27 @@ export function loadActivities(): Activity[] {
 export function saveActivities(activities: Activity[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
 }
+
+// Which activity the banner settled on, and the day it was picked. Kept out of
+// the activities themselves: it is a decision about the screen, not about the
+// data, and it may be thrown away at any time without losing anything.
+const HERO_KEY = "lighthouse.hero.v1";
+
+export interface HeroPick {
+  day: string;
+  id: string;
+}
+
+export function loadHeroPick(): HeroPick | null {
+  try {
+    const raw = localStorage.getItem(HERO_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as HeroPick;
+  } catch {
+    return null;
+  }
+}
+
+export function saveHeroPick(pick: HeroPick): void {
+  localStorage.setItem(HERO_KEY, JSON.stringify(pick));
+}

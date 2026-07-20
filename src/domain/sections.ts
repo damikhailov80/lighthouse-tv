@@ -27,14 +27,20 @@ function byUrgency(activities: Activity[], now: Date): Activity[] {
   return [...activities].sort((a, b) => remainingRatio(a, now) - remainingRatio(b, now));
 }
 
+// The calendar day, as a stable string. Everything picked "for today" — the
+// suggestions and the banner — keys off it, so the picks hold still until
+// midnight and then change together.
+export function dayKey(now: Date = new Date()): string {
+  return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+}
+
 // FNV-1a over the activity id, mixed with the day. Used instead of Math.random
 // so the suggestions hold still: the dashboard is remounted every time an
 // activity page is opened and closed, and a fresh shuffle would move the cards
 // out from under the remote. They change once a day instead.
 function shuffleKey(id: string, now: Date): number {
-  const day = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
   let hash = 2166136261;
-  for (const character of `${id}@${day}`) {
+  for (const character of `${id}@${dayKey(now)}`) {
     hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
   }
   return hash >>> 0;
@@ -78,11 +84,17 @@ export function sectionsOf(
   return sections;
 }
 
-// The activity featured in the banner: the single most urgent one. Derived from
-// the same ordering as the rows, so the two can never disagree.
+// The activity featured in the banner. `pinnedId` is the pick already made for
+// today: the banner is chosen once a day and then held, so marking it done
+// turns it green in place instead of handing the screen to another activity
+// mid-press. Without a pin — a new day, or a pinned activity that is gone — it
+// falls back to the single most urgent one, ordered exactly like the rows so
+// the two can never disagree.
 export function heroOf(
   activities: Activity[],
   now: Date = new Date(),
+  pinnedId: string | null = null,
 ): Activity | undefined {
-  return byUrgency(activities, now)[0];
+  const pinned = activities.find((activity) => activity.id === pinnedId);
+  return pinned ?? byUrgency(activities, now)[0];
 }

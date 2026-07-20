@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { Activity } from "./domain/types";
-import { loadActivities, saveActivities } from "./services/storage";
+import { loadActivities, loadHeroPick, saveActivities, saveHeroPick } from "./services/storage";
 import { remainingRatio } from "./domain/status";
+import { dayKey, heroOf } from "./domain/sections";
 import { seedActivities } from "./domain/seed";
 import { Dashboard } from "./components/Dashboard";
 import { ActivityDetail } from "./components/ActivityDetail";
@@ -13,15 +14,36 @@ import { DASHBOARD, activityIdOf, depthOf, hashFor, parseHash, type Route } from
 // a new one ("new"), or nothing (dialog closed).
 type EditTarget = Activity | "new" | null;
 
+// The card the remote is on, as a place on the dashboard: its row and its
+// position in it. Read off the focused element rather than looked up by id —
+// an activity has a card in several rows at once, and only the focused one is
+// the seat being left. Matched by data attribute, not by class: class names are
+// hashed by CSS Modules and are not stable selectors.
+function focusedSeat(): { row: string; index: number } | null {
+  const active = document.activeElement;
+  const card =
+    active instanceof HTMLElement ? active.closest<HTMLElement>("[data-card-id]") : null;
+  const row = card?.closest<HTMLElement>("[data-row]");
+  if (!card || !row?.dataset.row) return null;
+
+  const cards = Array.from(row.querySelectorAll<HTMLElement>("[data-card-id]"));
+  return { row: row.dataset.row, index: cards.indexOf(card) };
+}
+
 export function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   // The URL drives the UI, so a hash typed into the address bar opens the same
   // screen the in-app navigation would.
   const [route, setRoute] = useState<Route>(() => parseHash(location.hash));
   const [loaded, setLoaded] = useState(false);
+  // The activity the banner is showing today. Null until the pick is made.
+  const [heroId, setHeroId] = useState<string | null>(null);
   const didInitialFocus = useRef(false);
-  // Card to restore focus to when coming back from an activity page.
-  const lastOpenedId = useRef<string | null>(null);
+  // Where the card we opened sat: which row, and how far along it. The seat is
+  // remembered instead of the card itself because marking an activity done
+  // moves its card to another row — following it there would scroll the
+  // dashboard somewhere the remote never asked to go.
+  const lastSeat = useRef<{ row: string; index: number } | null>(null);
 
   useSpatialNavigation();
 
@@ -61,6 +83,24 @@ export function App() {
     }
   }, [loaded, route, activities]);
 
+  // Pick the banner's activity once a day and then hold it, the way the
+  // suggestions are held: marking it done should turn it green in place, not
+  // replace it with the next activity while the remote is still on the button.
+  // Re-picked when the day rolls over, or when the pinned activity is deleted.
+  useEffect(() => {
+    if (activities.length === 0) return;
+    const today = dayKey();
+    const stored = loadHeroPick();
+    if (stored?.day === today && activities.some((a) => a.id === stored.id)) {
+      setHeroId(stored.id);
+      return;
+    }
+    const picked = heroOf(activities)?.id;
+    if (!picked) return;
+    saveHeroPick({ day: today, id: picked });
+    setHeroId(picked);
+  }, [activities]);
+
   // Give the D-pad a starting point by focusing the banner once the dashboard
   // has rendered its activities — it already features the most urgent one.
   useEffect(() => {
@@ -68,8 +108,10 @@ export function App() {
     didInitialFocus.current = true;
     // Matched by data attribute, not by class: class names are hashed by CSS
     // Modules and are not stable selectors.
+    // The banner's own button is skipped when its activity is already done: it
+    // is disabled then, and a disabled element cannot take focus.
     const start =
-      document.querySelector<HTMLElement>("[data-hero]") ??
+      document.querySelector<HTMLElement>("[data-hero]:not([disabled])") ??
       document.querySelector<HTMLElement>("[data-card-id]") ??
       document.querySelector<HTMLElement>("[data-nav]");
     start?.focus();
@@ -120,14 +162,30 @@ export function App() {
         ? "new"
         : (activities.find((activity) => activity.id === route.id) ?? null);
 
-  // Restore focus to the card we came from after returning to the dashboard.
+  // Back on the dashboard: sit the remote down where it got up from. The row
+  // can have lost cards, or be gone entirely — marking the last overdue
+  // activity done takes the whole "Overdue" heading with it — so fall back to
+  // the closest seat still in that row, then to the banner, then to any card.
   useEffect(() => {
-    if (selectedId !== null || !lastOpenedId.current) return;
-    const card = document.querySelector<HTMLElement>(
-      `[data-card-id="${lastOpenedId.current}"]`,
+    if (selectedId !== null || !lastSeat.current) return;
+    const { row, index } = lastSeat.current;
+    lastSeat.current = null;
+
+    const cards = document.querySelectorAll<HTMLElement>(
+      `[data-row="${row}"] [data-card-id]`,
     );
-    lastOpenedId.current = null;
-    card?.focus();
+    const target =
+      cards[Math.min(index, cards.length - 1)] ??
+      document.querySelector<HTMLElement>("[data-hero]:not([disabled])") ??
+      document.querySelector<HTMLElement>("[data-card-id]");
+    if (!target) return;
+
+    // The dashboard is remounted at the top of the page, so focusing alone
+    // would glide the whole way down under `scroll-behavior: smooth`. Put the
+    // screen back in place first and instantly: nothing moved, as far as the
+    // viewer is concerned.
+    target.focus({ preventScroll: true });
+    target.scrollIntoView({ behavior: "instant", block: "nearest", inline: "nearest" });
   }, [selectedId, activities]);
 
   // Every in-app navigation goes through here: state and URL move together.
@@ -137,7 +195,7 @@ export function App() {
   };
 
   const openDetail = (activity: Activity) => {
-    lastOpenedId.current = activity.id;
+    lastSeat.current = focusedSeat();
     navigate({ kind: "detail", id: activity.id });
   };
 
@@ -222,6 +280,7 @@ export function App() {
         ) : (
           <Dashboard
             activities={sorted}
+            heroId={heroId}
             onOpen={openDetail}
             onAdd={() => openEdit("new")}
             onMarkDone={markDone}

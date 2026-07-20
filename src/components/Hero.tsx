@@ -1,5 +1,6 @@
+import { useRef } from "react";
 import type { Activity } from "../domain/types";
-import { progressFraction, statusOf } from "../domain/status";
+import { doneToday, progressFraction, statusOf } from "../domain/status";
 import { dueLabel, periodShort } from "../domain/format";
 import { activityImage } from "../assets/images";
 import buttons from "../styles/Button.module.css";
@@ -21,6 +22,11 @@ export function Hero({ activity, onMarkDone, onEdit }: HeroProps) {
   const statusClass = status[statusOf(activity)];
   const progress = Math.round(progressFraction(activity) * 100);
   const image = activityImage(activity.image);
+  // The banner stays on the same activity all day, so once it is done it has to
+  // say so itself: the remaining-time line turns into a badge and the offer to
+  // mark it done goes away.
+  const done = doneToday(activity);
+  const editRef = useRef<HTMLButtonElement>(null);
 
   return (
     <section className={`${styles.hero} ${statusClass}`}>
@@ -34,7 +40,11 @@ export function Hero({ activity, onMarkDone, onEdit }: HeroProps) {
         </div>
 
         <p className={styles.stats}>
-          <span className={styles.due}>{dueLabel(activity)}</span>
+          {done ? (
+            <span className={styles.done}>✓ Done today</span>
+          ) : (
+            <span className={styles.due}>{dueLabel(activity)}</span>
+          )}
           <span className={styles.period}>{periodShort(activity)}</span>
         </p>
 
@@ -48,11 +58,19 @@ export function Hero({ activity, onMarkDone, onEdit }: HeroProps) {
             type="button"
             data-nav
             data-hero
-            onClick={() => onMarkDone(activity.id)}
+            disabled={done}
+            // Marking it done disables this button, and a disabled element
+            // cannot hold focus — hand the remote to Edit before that happens,
+            // or the D-pad is left with nothing highlighted.
+            onClick={() => {
+              onMarkDone(activity.id);
+              editRef.current?.focus();
+            }}
           >
             Mark as done
           </button>
           <button
+            ref={editRef}
             className={`${buttons.ghost} ${styles.action}`}
             type="button"
             data-nav

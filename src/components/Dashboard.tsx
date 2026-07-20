@@ -8,6 +8,8 @@ import styles from "./Dashboard.module.css";
 
 interface DashboardProps {
   activities: Activity[];
+  // The activity picked for today's banner; null falls back to the most urgent.
+  heroId: string | null;
   onOpen: (activity: Activity) => void;
   onAdd: () => void;
   // The banner acts on its activity in place, without opening its page.
@@ -17,15 +19,15 @@ interface DashboardProps {
 
 export function Dashboard({
   activities,
+  heroId,
   onOpen,
   onAdd,
   onMarkDone,
   onEdit,
 }: DashboardProps) {
-  // The banner features the most urgent activity, which also keeps its card in
-  // the row below: a row heading should never lie about how many activities
-  // have that status.
-  const hero = heroOf(activities);
+  // The banner's activity also keeps its card in the row below: a row heading
+  // should never lie about how many activities have that status.
+  const hero = heroOf(activities, undefined, heroId);
   const sections = sectionsOf(activities);
 
   return (
@@ -45,6 +47,7 @@ export function Dashboard({
       {sections.map((section) => (
         <ActivityRow
           key={section.id}
+          id={section.id}
           title={section.title}
           activities={section.activities}
           onOpen={onOpen}
