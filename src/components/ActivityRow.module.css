@@ -28,9 +28,9 @@
   /* Runs the cards to the very edge of the screen, so the last one is cut off
      and reads as "there is more to the right". The negative margin cancels the
      row's own side padding for the track alone; the vertical pair keeps the
-     focus ring and the card's zoom from being clipped by overflow-x. */
-  padding: var(--space-1) var(--space-screen-x);
-  margin: calc(-1 * var(--space-1)) calc(-1 * var(--space-screen-x));
+     focus ring, the lift and its shadow from being clipped by overflow-x. */
+  padding: var(--space-4) var(--space-screen-x);
+  margin: calc(-1 * var(--space-4)) calc(-1 * var(--space-screen-x));
   /* `scroll-behavior` is not inherited, so the page's smooth scrolling has to
      be repeated here for the track to glide rather than jump between cards. */
   scroll-behavior: smooth;

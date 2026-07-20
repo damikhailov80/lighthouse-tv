@@ -6,7 +6,7 @@
   /* Never shrinks: a long row scrolls instead of squeezing its cards. A short
      row (three cards or fewer fit the screen) has slack left over, so the
      cards share it and grow — capped, so two cards do not become billboards. */
-  flex: 1 0 300px;
+  flex: 1 0 var(--card-basis, 300px);
   max-width: 400px;
   min-height: 230px;
   /* Padding lives on .content so the illustration can run edge to edge. */
@@ -26,6 +26,28 @@
   overflow: hidden;
 }
 
+/* A scrolling row keeps its cards trimmed, so a slice of the next one always
+   shows and the row reads as "there is more". */
+.card:not(.wide) {
+  --card-basis: 270px;
+}
+
+/* ---------- Focus ---------- */
+
+/* The focused card does not move, grow, or push its neighbours. Every version
+   that did fought the navigation hook, which measures cards with
+   getBoundingClientRect — a transformed box: growing the card made
+   scrollIntoView chase a target that was still moving (the judder), and
+   lifting it by even 8px put its own row-mates 8px "below" it, so pressing
+   down walked sideways along the row instead of leaving it.
+   So focus is spent on the two things that cost no geometry at all: the accent
+   frame, and the illustration drifting inside its fixed window. */
+.card:focus {
+  position: relative;
+  z-index: 1;
+  box-shadow: var(--shadow-lift);
+}
+
 /* The wide card of a short row. It may outgrow the cap above, because with
    three cards there is no scroll to hint at and the row has to reach the right
    edge on its own; the ceiling only stops a lone card from spanning the wall. */
@@ -33,9 +55,15 @@
   max-width: 640px;
 }
 
-/* Focus highlight — matches the outlined card in the design. */
+/* Focus outline — matches the outlined card in the design. */
 .card:focus {
   border-color: var(--color-accent);
+}
+
+/* The media box keeps its size; only the picture inside it moves. The card's
+   own frame is the crop, so nothing here can shift a neighbour. */
+.card:focus .image {
+  transform: scale(1.16);
 }
 
 /* Hover is a weaker echo of focus, for the desktop browser used during
@@ -52,8 +80,6 @@
   flex: 0 0 auto;
   height: 150px;
   background: var(--color-track);
-  /* Crops the focus zoom to the frame. Without it the scaled image spills past
-     the fade gradient below and shows up as a seam above the title. */
   overflow: hidden;
 }
 
@@ -64,6 +90,9 @@
   aspect-ratio: 16 / 9;
 }
 
+/* The zoom the focused card gets. Slower than the lift, so the card arrives
+   first and the picture keeps drifting for a moment after it — one transform on
+   one layer, which is all the TV can spare. */
 .image {
   display: block;
   width: 100%;
@@ -71,18 +100,7 @@
   /* Faces sit in the upper half of every illustration, so bias the crop up. */
   object-fit: cover;
   object-position: 50% 35%;
-  transition: transform var(--duration-slow) ease;
-}
-
-/* A gentle zoom marks the focused card without moving the layout. */
-.card:focus .image {
-  transform: scale(1.04);
-}
-
-/* :not(:focus) so a card that is both hovered and focused keeps the stronger
-   focus zoom instead of the later rule quietly overriding it. */
-.card:hover:not(:focus) .image {
-  transform: scale(1.02);
+  transition: transform var(--duration-slow) ease-out;
 }
 
 /* ---------- Content ---------- */
@@ -107,12 +125,20 @@
   background: var(--color-status);
 }
 
+/* Always exactly two lines tall, whatever the card's width: the title is the
+   only part that reflows, so pinning it here is what keeps a card from
+   changing height as it widens on focus. Longer titles are cut with an
+   ellipsis rather than allowed to push the row taller. */
 .title {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  height: 2.3em;
   margin: 0;
   font-size: var(--font-size-xl);
   font-weight: 600;
   line-height: 1.15;
+  overflow: hidden;
 }
 
 .top + .title {
@@ -157,11 +183,14 @@
   transition: width var(--duration-slow) ease;
 }
 
+/* One line, never two — see .title: the footer must not reflow either. */
 .stats {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: var(--space-2);
   font-size: var(--font-size-md);
+  white-space: nowrap;
 }
 
 .due {

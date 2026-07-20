@@ -34,38 +34,67 @@
   --palette-blue-500: #4d7d96;
   --palette-ink-800: #2c2a27;
   --palette-ink-900: #1a2436;
+  /* The logo navy, lifted far enough to still be a silhouette on the dark
+     background — at full strength the mark is only a hole with cream stripes
+     floating in it. */
+  --palette-ink-700: #36445e;
+
+  /* Night side of the same paper: the cream steps carried down into shadow.
+     Warm, never neutral grey — a TV in a dark room turns grey into blue. */
+  --palette-umber-900: #16130f;
+  --palette-umber-850: #1a1610;
+  --palette-umber-800: #1d1913;
+  --palette-umber-700: #262019;
+  --palette-umber-600: #302921;
+  --palette-umber-500: #3d3428;
 
   /* ---------- Semantic colour tokens ---------- */
 
-  --color-bg-top: var(--palette-cream-100);
-  --color-bg-bottom: var(--palette-cream-200);
-  /* Cards sit one step darker than the background so they read as paper on
-     paper without needing a shadow. */
-  --color-surface: var(--palette-cream-300);
-  --color-surface-raised: var(--palette-cream-50);
+  /* Dark variant: the illustrations' hues kept, their brightness dropped, so a
+     720p panel in a lit-for-evening room stops glaring. Only this semantic
+     block changes between the light and dark reading — the palette above and
+     every component below stay as they are. */
 
-  --color-text: var(--palette-ink-800);
-  --color-text-muted: #9c9486;
+  --color-bg-top: var(--palette-umber-900);
+  --color-bg-bottom: var(--palette-umber-850);
+  /* Cards sit one step *lighter* than the background here — in the dark it is
+     light that lifts a surface off the page, the same job the darker cream did
+     on the light background. */
+  --color-surface: var(--palette-umber-700);
+  --color-surface-raised: var(--palette-umber-600);
+
+  --color-text: var(--palette-cream-200);
+  --color-text-muted: #9a8f7c;
+  /* Text laid on an accent fill: stays light, since the fills are dark too. */
   --color-text-inverted: var(--palette-cream-50);
 
-  --color-accent: var(--palette-terracotta-500);
-  --color-accent-hover: var(--palette-terracotta-600);
-  --color-border: var(--palette-cream-400);
-  --color-focus-ring: rgba(188, 95, 44, 0.65);
+  /* One step lighter than on cream: a mid terracotta disappears into a dark
+     background, where on paper it was the darkest thing on screen. */
+  --color-accent: var(--palette-terracotta-400);
+  --color-accent-hover: #dd8b5c;
+  --color-border: var(--palette-umber-500);
+  /* The lighthouse mark keeps its own navy everywhere it sits on something
+     light — the amber disc of the boot screen, the launcher icon. In the
+     interface it now sits on the dark background instead, so the tower is the
+     one part that has to follow the theme. */
+  --color-logo-tower: var(--palette-ink-700);
+  --color-focus-ring: rgba(224, 166, 42, 0.75);
 
-  /* Traffic-light status scale, warmed up to sit inside the palette. */
-  --color-status-green: var(--palette-green-500);
+  /* Traffic-light status scale, lightened to keep its footing on the dark
+     surfaces while staying inside the palette. */
+  --color-status-green: var(--palette-green-400);
   --color-status-yellow: var(--palette-amber-500);
   --color-status-orange: var(--palette-terracotta-400);
-  --color-status-red: #b74b3a;
+  --color-status-red: #c85f4b;
 
   /* Accent of the currently rendered status. Components set this on their root
      element (see status.module.css) and their parts read it, so a dot and a
      progress bar never have to know which status they belong to. */
   --color-status: var(--color-text-muted);
 
-  /* Tinted overlays derived from the ink colour. */
-  --color-track: rgba(60, 45, 25, 0.12);
+  /* Tinted overlays. On a dark surface the recessed parts have to be cut with
+     light rather than with ink, so the track is a wash of the cream. */
+  --color-track: rgba(246, 234, 210, 0.13);
   /* Every other row is laid on this, so the stack of carousels reads as bands
      rather than one long sheet. A whole palette step rather than a wash: two
      translucent versions were tried first and both failed the same way — an
@@ -73,9 +102,11 @@
      neutral one drains the warmth out of the cream and reads as dirt. Sand is
      a colour the illustrations already contain, so it darkens the row without
      dulling it. It also sits further from the cards than the plain background
-     does, which makes them read better on a band than off one. */
-  --color-band: var(--palette-cream-400);
-  --color-scrim: rgba(30, 25, 18, 0.55);
+     does, which makes them read better on a band than off one. In the dark
+     reading the band works the same way, one palette step off the background —
+     it just moves up towards the cards instead of down away from them. */
+  --color-band: var(--palette-umber-800);
+  --color-scrim: rgba(8, 6, 4, 0.7);
 
   /* ---------- Typography ---------- */
 
@@ -122,6 +153,11 @@
 
   --border-width-focus: 3px;
   --border-width-control: 2px;
+
+  /* Cast by whatever the remote is sitting on, to lift it off its row without
+     moving it. Short and soft: a long blur is a large area to repaint, which a
+     TV feels. */
+  --shadow-lift: 0 8px 18px rgba(8, 6, 4, 0.55);
 
   --duration-fast: 0.15s;
   --duration-slow: 0.3s;

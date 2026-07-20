@@ -17,10 +17,13 @@
     <title>Lighthouse</title>
 
     <!-- Boot screen. Inline and first in the document so it paints before any
-         stylesheet or script is parsed: the app itself is cream, and a bright
-         flash on a TV in a dark room is blinding, so the document starts navy
-         and holds this splash until React has rendered the dashboard.
-         Colours are literals here — tokens.css is not loaded yet.
+         stylesheet or script is parsed: nothing must appear on a TV in a dark
+         room until React has rendered the dashboard, so the document starts on
+         the app's own background and holds this splash until it has.
+         Colours are literals here — tokens.css is not loaded yet — so #16130f
+         has to be kept equal to --color-bg-top by hand; it is the same colour
+         the Android side names @color/night, and the fade at the end of the
+         boot crosses it three times.
 
          Only on the TV: in a browser the page is already on screen instantly
          and a splash would just be in the way, so both the dark document and
@@ -28,7 +31,7 @@
          below). -->
     <style>
       html[data-env="tv"] {
-        background: #1a2436;
+        background: #16130f;
       }
 
       #splash {
@@ -44,7 +47,7 @@
         align-items: center;
         justify-content: center;
         gap: 40px;
-        background: #1a2436;
+        background: #16130f;
         transition: opacity 400ms ease;
       }
 
@@ -121,7 +124,7 @@
   </head>
   <body>
     <!-- Same mark as src/components/Logo.tsx, on an amber disc: the navy mark
-         would disappear on the navy screen, and the disc keeps it in the app's
+         would disappear on the dark screen, and the disc keeps it in the app's
          own colours instead of inverting it. The mark is scaled down inside the
          circle so the beams stay clear of the edge. Duplicated as plain markup
          because the React component cannot render before the bundle loads. -->

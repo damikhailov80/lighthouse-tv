@@ -6,7 +6,7 @@
 }
 
 .tower {
-  fill: var(--palette-ink-900);
+  fill: var(--color-logo-tower);
 }
 
 .glass {

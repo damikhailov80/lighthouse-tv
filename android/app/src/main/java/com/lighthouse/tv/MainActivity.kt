@@ -17,9 +17,11 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         webView = WebView(this).apply {
-            // A web view paints white until the page has its first frame; the
-            // boot screen in index.html is navy, so start from the same colour.
-            setBackgroundColor(getColor(R.color.logo_navy))
+            // A web view paints white until the page has its first frame, so it
+            // starts on the same colour as everything else in the launch: the
+            // window behind it, the system splash and the boot screen in
+            // index.html are all @color/night.
+            setBackgroundColor(getColor(R.color.night))
             settings.javaScriptEnabled = true
             // Enables localStorage, which the dashboard uses for persistence.
             settings.domStorageEnabled = true

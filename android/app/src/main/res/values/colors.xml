@@ -3,6 +3,13 @@
     <color name="cream">#F4ECDB</color>
     <color name="terracotta">#BD7539</color>
 
+    <!-- The field everything is drawn on before the dashboard appears. Must
+         stay equal to the color-bg-top token in src/styles/tokens.css: the fade from
+         the boot screen to the app crosses this colour, and any difference
+         between the two shows up as a flash of the wrong hue. Warm, not navy —
+         the interface is a warm dark, and the logo keeps navy to itself. -->
+    <color name="night">#16130F</color>
+
     <!-- Logo palette, mirroring the web tokens in src/styles/tokens.css. -->
     <color name="logo_navy">#1A2436</color>
     <color name="logo_glass">#F6EAD2</color>
