@@ -61,16 +61,6 @@
   transform: scale(1.02);
 }
 
-/* Fades the bottom of the picture into the card so the title never sits on a
-   busy edge. */
-.media::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 30%;
-  background: linear-gradient(to bottom, transparent, var(--color-surface));
-}
-
 /* ---------- Content ---------- */
 
 .content {

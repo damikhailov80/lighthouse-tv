@@ -33,8 +33,17 @@
   object-position: 50% 35%;
 }
 
+/* Status dot sits on the title line, mirroring the card it was opened from. */
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-6);
+}
+
 .dot {
-  display: block;
+  flex: 0 0 auto;
   width: 1.1rem;
   height: 1.1rem;
   border-radius: 50%;
@@ -42,7 +51,7 @@
 }
 
 .title {
-  margin: var(--space-3) 0 var(--space-6);
+  margin: 0;
   font-size: var(--font-size-3xl);
   font-weight: 700;
   line-height: 1.1;

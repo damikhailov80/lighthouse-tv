@@ -45,8 +45,10 @@ export function ActivityDetail({ activity, onMarkDone, onEdit, onBack }: Activit
           </div>
         )}
 
-        <span className={styles.dot} aria-hidden="true" />
-        <h1 className={styles.title}>{activity.title}</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>{activity.title}</h1>
+          <span className={styles.dot} aria-hidden="true" />
+        </div>
 
         <div className={styles.progress} aria-hidden="true">
           <div className={styles.progressFill} style={{ width: `${progress}%` }} />
