@@ -21,7 +21,20 @@ private const val CHANNEL_PROVIDER_ID = "recommended"
 private const val LOGO_PX = 320
 
 private const val PREFS = "lighthouse.channel"
-private const val KEY_BROWSABLE_ASKED = "browsable_asked"
+
+// The channel we have already asked the viewer about, by row id. A row id and
+// not a flag: the provider drops our channel whenever the app is reinstalled,
+// so the next launch builds a new one, and an answer given about the channel
+// before it says nothing about this one. A flag here meant the question was
+// asked exactly once in the life of the install and never again — after the
+// first reinstall the new channel sat there unasked and unbrowsable, and the
+// row was gone from the home screen until the television rebuilt it by itself.
+private const val KEY_BROWSABLE_ASKED_FOR = "browsable_asked_for"
+
+// Superseded by the key above. Deleted on sight so the old flag cannot sit in
+// the preferences for the life of the install, the way storage.ts clears the
+// storage keys it has outgrown.
+private const val LEGACY_KEY_BROWSABLE_ASKED = "browsable_asked"
 
 // The Google TV home screen's channel row: a few activities it is time to do,
 // put where they are seen without the app being opened at all. The dashboard
@@ -164,16 +177,25 @@ object RecommendationChannel {
         }
     }
 
-    // Asks the viewer, once, to let the row onto the home screen. The system
-    // owns that decision and shows its own dialog; all we can do is raise it,
+    // Asks the viewer to let the row onto the home screen. The system owns that
+    // decision and shows its own dialog; all we can do is raise the question,
     // and a television that asks again on every launch is a television nobody
     // keeps the app on. Asked only after the channel has cards in it, so the
     // dialog is never about an empty row.
+    //
+    // Once per channel, then — not once per install. Reinstalling the app takes
+    // our channel out of the provider with it, so every deploy builds a new one,
+    // and that new row has never been asked about however many times the old one
+    // was. Keyed on the row id so both hold: a viewer who said no is not asked
+    // about that channel again, and a channel nobody has been asked about always
+    // gets its question.
     @TargetApi(Build.VERSION_CODES.O)
     private fun requestBrowsable(context: Context, channelId: Long) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        if (prefs.getBoolean(KEY_BROWSABLE_ASKED, false)) return
-        prefs.edit().putBoolean(KEY_BROWSABLE_ASKED, true).apply()
+        prefs.edit().remove(LEGACY_KEY_BROWSABLE_ASKED).apply()
+
+        if (prefs.getLong(KEY_BROWSABLE_ASKED_FOR, -1L) == channelId) return
+        prefs.edit().putLong(KEY_BROWSABLE_ASKED_FOR, channelId).apply()
         TvContract.requestChannelBrowsable(context, channelId)
     }
 }

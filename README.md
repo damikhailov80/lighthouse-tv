@@ -48,6 +48,13 @@ The screensaver is a route, so it is debuggable without a television:
 Helpers: `npm run tv:devices` (confirm the TV shows as `device`), `npm run tv:logs`
 (logcat filtered to WebView JS errors and crashes).
 
+Every `tv:*` command goes through `android/adb-tv.sh`, which pins adb to the television —
+the mirror of `adb-emu.sh` on the emulator side. Both are needed because plain `adb`
+refuses every command with *"more than one device/emulator"* the moment a TV and an
+emulator are connected at once, and the command that fails is `install`, in the middle of
+`tv:deploy`, immediately after a build that has just printed **BUILD SUCCESSFUL** — so the
+run looks like it worked and nothing reaches the television.
+
 Typical loop: `tv:connect` once per session, then change code → `npm run tv:deploy`.
 The Gradle wrapper picks up `java` from PATH; **JDK 17** is required.
 
@@ -172,6 +179,39 @@ refusal is cleared out with the card it was about.
 Preview and Watch Next programs are both API 26; the app runs from 24, so on an older
 television all of this is a no-op — there is no home screen that could show it.
 
+### What the two launchers actually do with them
+
+Writing the rows is the app's whole part in this. Whether they are *drawn* is the
+launcher's decision, and the two launchers decide differently — worth knowing before
+concluding that something is broken.
+
+| | Leanback launcher (`com.google.android.tvlauncher`) | Google TV (`com.google.android.apps.tv.launcherx`) |
+|---|---|---|
+| Our channel | Shown, titled **"Lighthouse: Time to do"** | Shown, but titled **"Lighthouse"** — the app's name and icon; the channel's own display name is dropped. Sits low on the home screen, under Google's curated rows |
+| Play Next | Shown as its own row | **Not shown.** The row is written and `browsable` is 1, but Google TV's *Continue watching* is curated from its own sources and does not surface third-party entries |
+
+Both were checked on hardware: an AOSP TV emulator for the first column, a TCL Google TV
+(Android 11) for the second. On Google TV the channel is easy to miss — it is far enough
+down that it needs scrolling past several rows.
+
+**Reinstalling drops the channel**, and the row does not come back the moment the app is
+launched again. Two separate things are going on, and it is worth telling them apart
+before hunting a bug:
+
+- The provider deletes our channel with the package, so every `tv:deploy` builds a new
+  one, with a new row id and `browsable` back at 0. `requestChannelBrowsable` therefore
+  has to be asked again for the new row — which is why the "already asked" state is keyed
+  on the channel's row id rather than being a flag. A flag survived the reinstall that the
+  channel did not, so the new channel was never asked about and the row stayed gone for
+  good.
+- Even once asked, Google TV adds the row on its own schedule rather than immediately.
+  Minutes, or a reboot. Nothing in the app can hurry it; if the row is missing straight
+  after a deploy, that is the launcher, not the write.
+
+There is nothing to fix on our side for Play Next on Google TV: the entry is in the
+provider, correct and browsable, and the launcher declines to render it. It works on
+Leanback devices, which is why it is kept.
+
 **Both are only refreshed while the app is running.** An activity that falls overdue
 overnight says so the next time the app is opened, not at midnight. Fixing that means a
 `JobScheduler` job waking up to republish on its own, which is not built.
@@ -208,6 +248,8 @@ android/
     WatchNextRow.kt   the television's Play Next row, one card of ours in it
   sync-web.sh         build the web app into app/src/main/assets/www/, and copy the
                       illustrations into res/drawable-nodpi/ for the channel
+  adb-tv.sh           pin adb to the television, adb-emu.sh to the emulator, so the
+                      two sets of npm scripts survive both being connected
 ```
 
 Android project: Kotlin, `applicationId com.lighthouse.tv`, minSdk 24 / targetSdk 34 /
