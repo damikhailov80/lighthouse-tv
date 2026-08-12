@@ -18,6 +18,8 @@ design tokens, image keys, storage versioning — are in [CLAUDE.md](CLAUDE.md).
 - **Activity page** — details, mark as done, edit.
 - **Screensaver** — the same bundle on the `#/ambient` route, shown when the TV goes
   idle. See below.
+- **Home-screen channel** — a row of five cards in the TV launcher, outside the app
+  entirely. See below.
 
 ## Develop
 
@@ -99,14 +101,62 @@ every event is handled in `AmbientDream`, so none of them reaches the page.
 Until the app has been opened once on that TV there is nothing in storage, so the
 screensaver shows the seeded activities.
 
+## The home-screen channel
+
+**"Lighthouse: Time to do"** — a row of five cards in the Google TV launcher, so the
+answer is on the screen the television starts on rather than one app-launch away.
+Selecting a card opens that activity's page, where *Mark as done* is the next press.
+
+The five are picked at random from what is actually **time to do**: anything past green
+and not already finished today. The draw is seeded from the day (`shuffleKey`, the same
+one the dashboard's suggestions use), so the row holds still until midnight instead of
+rearranging itself under a viewer who has just marked something done. A short list —
+most of the activities green — is topped up with whatever is closest to falling due,
+because a half-empty row on the home screen reads as a broken app rather than as good
+news. Being a *random* draw among the due ones, it is not a ranking: two overdue
+activities can both lose the toss to something with three days left.
+
+It is republished **on launch and after every change** to an activity, and the rows are
+matched by activity id and updated in place — republishing is not a wipe, so the row
+never blinks or loses the place of someone standing in it.
+
+Three things about how it is wired:
+
+- **`localStorage` cannot be read by the launcher**, which is a separate process. So the
+  dashboard's web view — and only that one, never the screensaver's — is given a
+  `ChannelBridge` JavaScript interface, and hands over cards it has already decided on
+  and written the labels for. Kotlin only copies them into the TV provider.
+- **The illustrations go into the APK a second time.** The launcher cannot read the
+  base64 the single-file build inlines either, so `sync-web.sh` copies `src/assets/*.jpg`
+  into `res/drawable-nodpi/img_*.jpg` and the cards point at `android.resource://` URIs.
+  Those copies are generated and gitignored; the originals stay the only copy in git.
+- **The viewer decides whether the row appears.** `TvContract.requestChannelBrowsable`
+  raises the question once, the first time the channel has cards in it, and the answer is
+  remembered so no one is asked twice. Until then the channel exists but is not browsable,
+  and can be switched on by hand in the launcher's *Customise channels*.
+
+Preview channels are API 26; the app runs from 24, so on an older television all of this
+is a no-op — there is no home screen that could show it.
+
+**It is only refreshed while the app is running.** An activity that falls overdue
+overnight says so the next time the app is opened, not at midnight. Fixing that means a
+`JobScheduler` job waking up to republish on its own, which is not built.
+
+Written entirely through the platform `android.media.tv.TvContract`, so `androidx.tvprovider`
+is not a dependency. Because the provider scopes every read to the owning package,
+`adb shell content query --uri content://android.media.tv/channel` shows **nothing** even
+when the channel is there — the shell is not us. Look at the launcher instead.
+
 ## Layout
 
 ```
 src/
   main.tsx            picks the mode: #/ambient -> Ambient, everything else -> App
   App.tsx             routing, history, persistence, the day's picks
-  domain/             types, period, status, format, sections (the day's rows), route, seed
+  domain/             types, period, status, format, sections (the day's rows), route,
+                      recommendations (the channel's picks), seed
   services/storage.ts the only place localStorage is touched
+  services/channel.ts the only place the native bridge is touched
   hooks/              useSpatialNavigation (D-pad)
   components/         Dashboard, Hero, ActivityRow, ActivityCard, ActivityDetail,
                       EditActivityDialog, Ambient, Logo
@@ -114,15 +164,21 @@ src/
   styles/             tokens.css, global.css, shared Button/status modules
 android/
   app/src/main/java/com/lighthouse/tv/
-    MainActivity.kt   fullscreen WebView, immersive bars, BACK walks web history
+    MainActivity.kt   fullscreen WebView, immersive bars, BACK walks web history,
+                      lighthouse://activity/<id> deep links
     AmbientDream.kt   the screensaver
     AppWebView.kt     the WebView both of them are built from
-  sync-web.sh         build the web app and copy it into app/src/main/assets/www/
+    ChannelBridge.kt  the one crossing from the web layer to the native side
+    RecommendationChannel.kt  the home-screen row, written to the TV provider
+  sync-web.sh         build the web app into app/src/main/assets/www/, and copy the
+                      illustrations into res/drawable-nodpi/ for the channel
 ```
 
 Android project: Kotlin, `applicationId com.lighthouse.tv`, minSdk 24 / targetSdk 34 /
-compileSdk 36, **no third-party dependencies**. Icon and TV banner are vector XML, so
-the APK carries no binary assets of its own.
+compileSdk 36, **no third-party dependencies**. Icon and TV banner are vector XML; the
+only binaries in the APK are the illustrations, and they are there twice — inlined in the
+web bundle for the app, and as resources for the launcher, which cannot read the first
+copy.
 
 ## Decisions worth knowing
 
@@ -136,7 +192,9 @@ the APK carries no binary assets of its own.
   of the interval* (`>0.5` green, `>0.2` yellow, else orange; overdue is red), so they
   mean the same thing on a 3-day and a 6-month period.
 - **The day's picks are frozen** (`lighthouse.hero.v1`, `lighthouse.layout.v1`). They are
-  decisions about the screen, not about the data — losing them costs a reshuffle.
+  decisions about the screen, not about the data — losing them costs a reshuffle. The
+  home-screen channel holds still the same way, but stores nothing: its draw is seeded
+  from the day, so it can simply be recomputed.
 - **The header font is a fallback serif stack** (Cooper Black → Georgia → serif). No font
   file is bundled: that would be a new binary asset, which needs sign-off.
 - **UI language is English**, deliberately, although the original mockup was Russian.
@@ -165,9 +223,8 @@ splash, the WebView background and the boot screen inlined in `index.html`.
 
 - Autostart on TV boot (`BOOT_COMPLETED` receiver), or the `HOME` category so the TV
   starts straight into the dashboard.
-- A home-screen channel (`androidx.tvprovider`) — the only way to put cards inside the
-  Google TV launcher. Needs today's pick exported to the native side, since the launcher
-  row is drawn by Kotlin and cannot read `localStorage`.
+- Refreshing the home-screen channel while the app is closed (a `JobScheduler` job), so
+  something falling overdue overnight says so before anyone opens the app.
 - Server-side storage for activities, so a phone and the TV share one list. Would need
   `updatedAt`, soft deletes (`deletedAt`) and `max(lastDoneAt)` as the merge rule, plus a
   device-code sign-in — there is no keyboard on a remote.

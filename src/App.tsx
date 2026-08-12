@@ -8,6 +8,7 @@ import {
   saveDayLayout,
   saveHeroPick,
 } from "./services/storage";
+import { publishChannel } from "./services/channel";
 import { remainingRatio } from "./domain/status";
 import { dayKey, heroOf, layoutOf, type DayLayout } from "./domain/sections";
 import { seedActivities } from "./domain/seed";
@@ -131,6 +132,17 @@ export function App() {
     saveDayLayout(dealt);
     setLayout(dealt);
   }, [activities, layout, heroId]);
+
+  // Keep the home-screen channel in step with the list: republished on launch
+  // and after every change to an activity. Hung on `activities` rather than on
+  // the individual handlers because commit() replaces it on every mark-done,
+  // save and delete, which is exactly the set of events the channel cares
+  // about — a card offering something that was finished an hour ago is the one
+  // thing a recommendation row must never do.
+  useEffect(() => {
+    if (!loaded) return;
+    publishChannel(activities);
+  }, [loaded, activities]);
 
   // Give the D-pad a starting point by focusing the banner once the dashboard
   // has rendered its activities — it already features the most urgent one.

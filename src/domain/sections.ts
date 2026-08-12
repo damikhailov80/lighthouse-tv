@@ -55,7 +55,11 @@ export function dayKey(now: Date = new Date()): string {
 // so the suggestions hold still: the dashboard is remounted every time an
 // activity page is opened and closed, and a fresh shuffle would move the cards
 // out from under the remote. They change once a day instead.
-function shuffleKey(id: string, now: Date): number {
+//
+// Exported because the home-screen channel deals its cards the same way, and
+// for the same reason: a launcher row that reshuffles every time something is
+// marked done is worse than one that is slightly out of date.
+export function shuffleKey(id: string, now: Date): number {
   let hash = 2166136261;
   for (const character of `${id}@${dayKey(now)}`) {
     hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);

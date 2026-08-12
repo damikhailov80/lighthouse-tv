@@ -1,9 +1,16 @@
 package com.lighthouse.tv
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.webkit.WebView
+
+// The scheme the home screen's cards are addressed by. Kept in step with the
+// intent filter in AndroidManifest.xml and with the links written in
+// RecommendationChannel.
+const val DEEP_LINK_SCHEME = "lighthouse"
+const val DEEP_LINK_HOST = "activity"
 
 // Thin native shell: a single fullscreen WebView that runs the React dashboard
 // bundled under assets/www. All app logic lives in the web layer.
@@ -14,9 +21,32 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        webView = appWebView(this)
+        // The bridge goes on this web view and not on the screensaver's: the
+        // dashboard is the screen that owns the list, so it is the one allowed
+        // to say what the home screen offers.
+        webView = appWebView(this, routeOf(intent), ChannelBridge(applicationContext))
         setContentView(webView)
         webView.requestFocus()
+    }
+
+    // A second card selected while the app is already running. launchMode is
+    // singleTask, so this arrives instead of a new instance being stacked on
+    // top of the old one — the page just navigates, the way it would if the
+    // remote had done it.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        webView.loadUrl(APP_URL + routeOf(intent))
+    }
+
+    // Turns lighthouse://activity/<id> into the hash the web app already
+    // understands. Anything else — the launcher icon, the screensaver, the
+    // channel's own heading — opens the dashboard.
+    private fun routeOf(intent: Intent?): String {
+        val uri = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.data ?: return ""
+        if (uri.scheme != DEEP_LINK_SCHEME || uri.host != DEEP_LINK_HOST) return ""
+        val id = uri.pathSegments.firstOrNull() ?: return ""
+        return "#/activity/$id"
     }
 
     override fun onResume() {
