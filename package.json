@@ -13,8 +13,17 @@
     "tv:uninstall": "adb uninstall com.lighthouse.tv || true",
     "tv:run": "adb shell am start -n com.lighthouse.tv/.MainActivity",
     "tv:deploy": "npm run tv:connect && npm run tv:uninstall && npm run tv:build && npm run tv:upload && npm run tv:run",
+    "tv:reboot": "adb -s ${TV_IP:-192.168.1.11}:5555 reboot",
     "tv:devices": "adb devices -l",
-    "tv:logs": "adb logcat -s chromium:E chromium:W AndroidRuntime:E"
+    "tv:logs": "adb logcat -s chromium:E chromium:W AndroidRuntime:E",
+    "emu:list": "bash android/emulator.sh --list",
+    "emu:start": "bash android/emulator.sh",
+    "emu:install": "bash android/adb-emu.sh install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "emu:uninstall": "bash android/adb-emu.sh uninstall com.lighthouse.tv || true",
+    "emu:run": "bash android/adb-emu.sh shell am start -n com.lighthouse.tv/.MainActivity",
+    "emu:reboot": "bash android/emulator.sh --reboot",
+    "emu:deploy": "npm run emu:start && npm run emu:uninstall && npm run tv:build && npm run emu:install && npm run emu:run",
+    "emu:logs": "bash android/adb-emu.sh logcat -s chromium:E chromium:W AndroidRuntime:E"
   },
   "dependencies": {
     "react": "^19.0.0",
