@@ -6,12 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.WebView
 
-// The scheme the home screen's cards are addressed by. Kept in step with the
-// intent filter in AndroidManifest.xml and with the links written in
-// RecommendationChannel.
-const val DEEP_LINK_SCHEME = "lighthouse"
-const val DEEP_LINK_HOST = "activity"
-
 // Thin native shell: a single fullscreen WebView that runs the React dashboard
 // bundled under assets/www. All app logic lives in the web layer.
 class MainActivity : Activity() {

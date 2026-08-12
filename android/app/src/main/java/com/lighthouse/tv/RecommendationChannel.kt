@@ -4,28 +4,13 @@ import android.annotation.TargetApi
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.media.tv.TvContract
 import android.media.tv.TvContract.Channels
 import android.media.tv.TvContract.PreviewPrograms
-import android.net.Uri
 import android.os.Build
 import android.provider.BaseColumns
-
-// One card in the home-screen channel, exactly as the web layer handed it over.
-// Every decision about what to offer was taken there; this side only copies the
-// fields into the TV provider.
-data class ChannelCard(
-    // The activity. Both the deep-link target and the key rows are matched on,
-    // so a republish updates the card that is already on the home screen.
-    val id: String,
-    val title: String,
-    val subtitle: String,
-    // The web layer's image key, e.g. "board-games".
-    val image: String?,
-)
 
 // Identifies our one row among the channels this package owns. Looked up rather
 // than remembered, so a cleared cache cannot leave a second, orphaned channel
@@ -177,31 +162,6 @@ object RecommendationChannel {
             put(PreviewPrograms.COLUMN_POSTER_ART_URI, it)
             put(PreviewPrograms.COLUMN_POSTER_ART_ASPECT_RATIO, PreviewPrograms.ASPECT_RATIO_16_9)
         }
-    }
-
-    // The illustration, from the APK's own resources. The launcher is another
-    // process and cannot read the base64 the web bundle inlines, so sync-web.sh
-    // copies the same files into res/drawable-nodpi as well.
-    //
-    // Looked up by name at run time rather than through R, so that a Gradle
-    // build without a preceding sync-web.sh still compiles: a missing
-    // illustration costs the card its picture and nothing else.
-    private fun posterUri(context: Context, image: String?): String? {
-        if (image == null) return null
-        val name = "img_" + image.replace('-', '_')
-        val resource = context.resources.getIdentifier(name, "drawable", context.packageName)
-        if (resource == 0) return null
-        return "android.resource://${context.packageName}/drawable/$name"
-    }
-
-    // Where a card leads, as an intent URI the launcher can parse. An implicit
-    // VIEW intent rather than a component of ours, so the same link can be fired
-    // from adb to test the route without going near the home screen.
-    private fun deepLink(activityId: String?): String {
-        val uri = if (activityId == null) "$DEEP_LINK_SCHEME://$DEEP_LINK_HOST" else {
-            "$DEEP_LINK_SCHEME://$DEEP_LINK_HOST/${Uri.encode(activityId)}"
-        }
-        return Intent(Intent.ACTION_VIEW, Uri.parse(uri)).toUri(Intent.URI_INTENT_SCHEME)
     }
 
     // Asks the viewer, once, to let the row onto the home screen. The system

@@ -39,6 +39,12 @@ const MIN_ROW_SIZE = 4;
 // MIN_ROW_SIZE, like "All activities" but for the opposite reason.
 const SUGGESTION_COUNT = 3;
 
+// The id of the suggestions row. Named rather than spelled out at each use: the
+// screensaver and the home screen's Watch Next card both go looking for this
+// row in a stored layout, and a typo in either would only show up as a quietly
+// missing line.
+export const SUGGESTED_ROW = "suggested";
+
 // Most urgent first (overdue at the front, greenest at the back).
 function byUrgency(activities: Activity[], now: Date): Activity[] {
   return [...activities].sort((a, b) => remainingRatio(a, now) - remainingRatio(b, now));
@@ -123,7 +129,7 @@ export function layoutOf(
   // to offer — its wide cards fill the screen on their own.
   const suggestions = suggestionsOf(sorted, now, hero?.id);
   if (suggestions.length > 0) {
-    add("suggested", "Suggested for today", suggestions);
+    add(SUGGESTED_ROW, "Suggested for today", suggestions);
   }
 
   for (const { id, title, statuses } of GROUPS) {

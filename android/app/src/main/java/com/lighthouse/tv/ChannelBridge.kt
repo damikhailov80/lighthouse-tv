@@ -29,25 +29,30 @@ class ChannelBridge(private val context: Context) {
     @JavascriptInterface
     fun publish(json: String) {
         try {
-            RecommendationChannel.sync(context, parse(json))
+            val payload = JSONObject(json)
+            val cards = payload.getJSONArray("cards")
+            RecommendationChannel.sync(
+                context,
+                (0 until cards.length()).map { card(cards.getJSONObject(it)) },
+            )
+            // Null when the day has nothing left to suggest, which is the row
+            // being emptied rather than left as it was.
+            WatchNextRow.sync(
+                context,
+                if (payload.isNull("watchNext")) null else card(payload.getJSONObject("watchNext")),
+            )
         } catch (error: Exception) {
-            Log.w(TAG, "Could not publish the home-screen channel", error)
+            Log.w(TAG, "Could not publish to the home screen", error)
         }
     }
 
-    private fun parse(json: String): List<ChannelCard> {
-        val cards = JSONObject(json).getJSONArray("cards")
-        return (0 until cards.length()).map { index ->
-            val card = cards.getJSONObject(index)
-            ChannelCard(
-                id = card.getString("id"),
-                title = card.getString("title"),
-                subtitle = card.getString("subtitle"),
-                // Activities created before illustrations existed have no image.
-                image = if (card.isNull("image")) null else card.getString("image"),
-            )
-        }
-    }
+    private fun card(json: JSONObject) = ChannelCard(
+        id = json.getString("id"),
+        title = json.getString("title"),
+        subtitle = json.getString("subtitle"),
+        // Activities created before illustrations existed have no image.
+        image = if (json.isNull("image")) null else json.getString("image"),
+    )
 
     private companion object {
         const val TAG = "LighthouseChannel"

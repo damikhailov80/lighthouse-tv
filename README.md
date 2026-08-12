@@ -18,8 +18,8 @@ design tokens, image keys, storage versioning — are in [CLAUDE.md](CLAUDE.md).
 - **Activity page** — details, mark as done, edit.
 - **Screensaver** — the same bundle on the `#/ambient` route, shown when the TV goes
   idle. See below.
-- **Home-screen channel** — a row of five cards in the TV launcher, outside the app
-  entirely. See below.
+- **Home screen** — a row of five cards in the TV launcher, plus one card in the
+  television's own "Play Next", outside the app entirely. See below.
 
 ## Develop
 
@@ -101,11 +101,15 @@ every event is handled in `AmbientDream`, so none of them reaches the page.
 Until the app has been opened once on that TV there is nothing in storage, so the
 screensaver shows the seeded activities.
 
-## The home-screen channel
+## The home screen
 
-**"Lighthouse: Time to do"** — a row of five cards in the Google TV launcher, so the
-answer is on the screen the television starts on rather than one app-launch away.
-Selecting a card opens that activity's page, where *Mark as done* is the next press.
+Two rows, so the answer is on the screen the television starts on rather than one
+app-launch away. Selecting any card opens that activity's page, where *Mark as done* is
+the next press.
+
+### Our own channel: "Lighthouse: Time to do"
+
+A row of five cards, in the launcher's list of channels.
 
 The five are picked at random from what is actually **time to do**: anything past green
 and not already finished today. The draw is seeded from the day (`shuffleKey`, the same
@@ -120,7 +124,36 @@ It is republished **on launch and after every change** to an activity, and the r
 matched by activity id and updated in place — republishing is not a wipe, so the row
 never blinks or loses the place of someone standing in it.
 
-Three things about how it is wired:
+### Play Next
+
+The television's own row, the one at the top that every app puts a single card in. Ours
+starts from **the three activities the dashboard suggested this morning**, read from the
+layout it stored rather than dealt again, so the two screens can never name different
+things on the same day. One card and never more: this row belongs to the television, and
+an app that fills it with five of its own is an app that gets turned off.
+
+Anything already done today is passed over — the row asks "what next?", and something
+finished an hour ago is not an answer. **Marking off the card that is standing there puts
+a different one in its place**, and it does not stop at the three: the suggestions are a
+row of three because three is what fits across a screen, while this row holds one at a
+time and can go on past them. It works through everything else in the same day-seeded
+order, and then — when the banner's pick is the last thing left undone — names that,
+which the suggestions deliberately leave out. Only when there is genuinely nothing left
+to do does the card come out and the row go back to the other apps.
+
+Written as `WATCH_NEXT_TYPE_NEXT`: nothing here was left half-finished, and a recurring
+activity that has come round again is precisely the next one in a series. The launcher
+sorts the row by `LAST_ENGAGEMENT_TIME`, which is set to **when the card was put in front
+of the viewer**, not to when they last did the activity — a chore neglected for a month
+would otherwise be filed at the far end of the row, the one place it must not be. It is
+written on insert and left alone on update, so a card already seen does not jump back to
+the front every time the app is opened.
+
+If the viewer swipes the card away, the launcher clears its `browsable` flag and it is
+left off — but only while the row still names that activity. When the pick moves on, the
+refusal is cleared out with the card it was about.
+
+### How both are wired
 
 - **`localStorage` cannot be read by the launcher**, which is a separate process. So the
   dashboard's web view — and only that one, never the screensaver's — is given a
@@ -130,22 +163,23 @@ Three things about how it is wired:
   base64 the single-file build inlines either, so `sync-web.sh` copies `src/assets/*.jpg`
   into `res/drawable-nodpi/img_*.jpg` and the cards point at `android.resource://` URIs.
   Those copies are generated and gitignored; the originals stay the only copy in git.
-- **The viewer decides whether the row appears.** `TvContract.requestChannelBrowsable`
+- **The viewer decides whether our channel appears.** `TvContract.requestChannelBrowsable`
   raises the question once, the first time the channel has cards in it, and the answer is
   remembered so no one is asked twice. Until then the channel exists but is not browsable,
-  and can be switched on by hand in the launcher's *Customise channels*.
+  and can be switched on by hand in the launcher's *Customise channels*. Play Next needs
+  none of this — it is the television's row and is always shown.
 
-Preview channels are API 26; the app runs from 24, so on an older television all of this
-is a no-op — there is no home screen that could show it.
+Preview and Watch Next programs are both API 26; the app runs from 24, so on an older
+television all of this is a no-op — there is no home screen that could show it.
 
-**It is only refreshed while the app is running.** An activity that falls overdue
+**Both are only refreshed while the app is running.** An activity that falls overdue
 overnight says so the next time the app is opened, not at midnight. Fixing that means a
 `JobScheduler` job waking up to republish on its own, which is not built.
 
 Written entirely through the platform `android.media.tv.TvContract`, so `androidx.tvprovider`
 is not a dependency. Because the provider scopes every read to the owning package,
 `adb shell content query --uri content://android.media.tv/channel` shows **nothing** even
-when the channel is there — the shell is not us. Look at the launcher instead.
+when the rows are there — the shell is not us. Look at the launcher instead.
 
 ## Layout
 
@@ -154,7 +188,7 @@ src/
   main.tsx            picks the mode: #/ambient -> Ambient, everything else -> App
   App.tsx             routing, history, persistence, the day's picks
   domain/             types, period, status, format, sections (the day's rows), route,
-                      recommendations (the channel's picks), seed
+                      recommendations (what the home screen offers), seed
   services/storage.ts the only place localStorage is touched
   services/channel.ts the only place the native bridge is touched
   hooks/              useSpatialNavigation (D-pad)
@@ -169,7 +203,9 @@ android/
     AmbientDream.kt   the screensaver
     AppWebView.kt     the WebView both of them are built from
     ChannelBridge.kt  the one crossing from the web layer to the native side
-    RecommendationChannel.kt  the home-screen row, written to the TV provider
+    ChannelCard.kt    what a card is, and how it finds its picture and its link
+    RecommendationChannel.kt  our own channel of five, written to the TV provider
+    WatchNextRow.kt   the television's Play Next row, one card of ours in it
   sync-web.sh         build the web app into app/src/main/assets/www/, and copy the
                       illustrations into res/drawable-nodpi/ for the channel
 ```

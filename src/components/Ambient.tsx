@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { loadActivities, loadDayLayout, loadHeroPick } from "../services/storage";
 import { seedActivities } from "../domain/seed";
-import { dayKey, heroOf, layoutOf } from "../domain/sections";
+import { SUGGESTED_ROW, dayKey, heroOf, layoutOf } from "../domain/sections";
 import { dueLabel, periodShort } from "../domain/format";
 import { doneToday, statusOf } from "../domain/status";
 import { activityImage } from "../assets/images";
@@ -49,7 +49,7 @@ export function Ambient() {
   const rows =
     layout?.day === today ? layout.rows : layoutOf(activities, now, hero?.id ?? null).rows;
   const byId = new Map(activities.map((activity) => [activity.id, activity]));
-  const also = (rows.find((row) => row.id === "suggested")?.activityIds ?? [])
+  const also = (rows.find((row) => row.id === SUGGESTED_ROW)?.activityIds ?? [])
     .filter((id) => id !== hero?.id)
     .map((id) => byId.get(id)?.title)
     .filter((title): title is string => title !== undefined)

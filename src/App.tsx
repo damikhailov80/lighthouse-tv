@@ -133,16 +133,22 @@ export function App() {
     setLayout(dealt);
   }, [activities, layout, heroId]);
 
-  // Keep the home-screen channel in step with the list: republished on launch
-  // and after every change to an activity. Hung on `activities` rather than on
-  // the individual handlers because commit() replaces it on every mark-done,
-  // save and delete, which is exactly the set of events the channel cares
+  // Keep the home screen in step with the list: republished on launch and after
+  // every change to an activity. Hung on `activities` rather than on the
+  // individual handlers because commit() replaces it on every mark-done, save
+  // and delete, which is exactly the set of events the home screen cares
   // about — a card offering something that was finished an hour ago is the one
   // thing a recommendation row must never do.
+  //
+  // Held back until the day's rows are dealt, since the Watch Next card comes
+  // out of them: publishing first would take that card down and put it straight
+  // back a moment later, which on that row costs it its place. An empty list
+  // never gets a layout, and is published as it is — the home screen has to be
+  // emptied too when the last activity goes.
   useEffect(() => {
-    if (!loaded) return;
-    publishChannel(activities);
-  }, [loaded, activities]);
+    if (!loaded || (activities.length > 0 && layout === null)) return;
+    publishChannel(activities, layout, heroId);
+  }, [loaded, activities, layout, heroId]);
 
   // Give the D-pad a starting point by focusing the banner once the dashboard
   // has rendered its activities — it already features the most urgent one.

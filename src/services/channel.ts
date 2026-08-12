@@ -1,10 +1,12 @@
 import type { Activity } from "../domain/types";
-import { recommendedActivities } from "../domain/recommendations";
+import type { DayLayout } from "../domain/sections";
+import { recommendedActivities, watchNextActivity } from "../domain/recommendations";
 import { dueLabel, periodShort } from "../domain/format";
 
-// One card in the home-screen channel, as the native side wants it: finished
-// text, and an image key rather than a URL. Every decision about what to offer
-// is taken here — Kotlin only copies the fields into the TV provider.
+// One card on the home screen, as the native side wants it: finished text, and
+// an image key rather than a URL. Every decision about what to offer is taken
+// here — Kotlin only copies the fields into the TV provider. The same shape
+// serves both rows: our channel of things it is time to do, and Watch Next.
 export interface ChannelCard {
   // The activity this card is about. Doubles as the deep-link target and as the
   // key the native side diffs on, so a republish updates the row that is
@@ -28,26 +30,45 @@ declare global {
   }
 }
 
-// Hands the current picks to the native side. The only place the bridge is
-// touched, the way services/storage.ts is the only place localStorage is.
-//
-// Called on launch and after every change to the list. Silently does nothing
-// when there is no bridge, and never throws: the channel is a convenience on
-// another screen, and it must not be able to take the app down with it.
-export function publishChannel(activities: Activity[], now: Date = new Date()): void {
-  const bridge = window.LighthouseChannel;
-  if (!bridge) return;
-
-  const cards: ChannelCard[] = recommendedActivities(activities, now).map((activity) => ({
+function cardFor(activity: Activity, now: Date): ChannelCard {
+  return {
     id: activity.id,
     title: activity.title,
     subtitle: `${dueLabel(activity, now)} · ${periodShort(activity)}`,
     image: activity.image,
-  }));
+  };
+}
+
+// Hands the current picks to the native side: our own row of things it is time
+// to do, and the one card for the television's "Play Next". The only place the
+// bridge is touched, the way services/storage.ts is the only place localStorage
+// is.
+//
+// Called on launch and after every change to the list. Silently does nothing
+// when there is no bridge, and never throws: the home screen is a convenience
+// on another screen, and it must not be able to take the app down with it.
+//
+// `layout` and `heroId` are the day's decisions as the dashboard made them —
+// the Watch Next card starts from the suggestions in one and steps around the
+// other, so that the two screens name the same thing.
+export function publishChannel(
+  activities: Activity[],
+  layout: DayLayout | null,
+  heroId: string | null,
+  now: Date = new Date(),
+): void {
+  const bridge = window.LighthouseChannel;
+  if (!bridge) return;
+
+  const cards = recommendedActivities(activities, now).map((activity) => cardFor(activity, now));
+  const next = watchNextActivity(activities, layout, heroId, now);
 
   try {
-    bridge.publish(JSON.stringify({ cards }));
+    bridge.publish(
+      JSON.stringify({ cards, watchNext: next ? cardFor(next, now) : null }),
+    );
   } catch {
-    // The channel is out of date until the next publish. Nothing else changes.
+    // The home screen is out of date until the next publish. Nothing else
+    // changes.
   }
 }
