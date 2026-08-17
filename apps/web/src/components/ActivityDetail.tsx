@@ -1,7 +1,12 @@
 import { useEffect, useRef } from "react";
-import type { Activity } from "../domain/types";
-import { daysSinceLastDone, progressFraction, statusOf } from "../domain/status";
-import { dueLabel, periodShort } from "../domain/format";
+import {
+  type Activity,
+  daysSinceLastDone,
+  progressFraction,
+  statusOf,
+  dueLabel,
+  periodShort,
+} from "@lighthouse/shared";
 import { activityImage } from "../assets/images";
 import buttons from "../styles/Button.module.css";
 import status from "../styles/status.module.css";

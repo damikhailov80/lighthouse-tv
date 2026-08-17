@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import type { Activity, ActivityImage, PeriodUnit } from "../domain/types";
+import { type Activity, type ActivityImage, type PeriodUnit } from "@lighthouse/shared";
 import { ACTIVITY_IMAGES } from "../assets/images";
 import buttons from "../styles/Button.module.css";
 import styles from "./EditActivityDialog.module.css";

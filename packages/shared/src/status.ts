@@ -1,5 +1,5 @@
-import type { Activity, ActivityStatus } from "./types";
-import { intervalDays } from "./period";
+import type { Activity, ActivityStatus } from "./types.js";
+import { intervalDays } from "./period.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

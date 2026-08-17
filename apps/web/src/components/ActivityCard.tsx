@@ -1,6 +1,10 @@
-import type { Activity } from "../domain/types";
-import { progressFraction, statusOf } from "../domain/status";
-import { dueLabel, periodShort } from "../domain/format";
+import {
+  type Activity,
+  progressFraction,
+  statusOf,
+  dueLabel,
+  periodShort,
+} from "@lighthouse/shared";
 import { activityImage } from "../assets/images";
 import status from "../styles/status.module.css";
 import styles from "./ActivityCard.module.css";

@@ -1,4 +1,4 @@
-import type { Activity } from "./types";
+import type { Activity } from "./types.js";
 
 const daysAgo = (n: number): string =>
   new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();

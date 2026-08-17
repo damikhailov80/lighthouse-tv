@@ -12,7 +12,7 @@ npm run build
 DEST="$ROOT/android/app/src/main/assets/www"
 rm -rf "$DEST"
 mkdir -p "$DEST"
-cp -r "$ROOT/dist/." "$DEST/"
+cp -r "$ROOT/apps/web/dist/." "$DEST/"
 
 echo "Web build copied to $DEST"
 
@@ -30,7 +30,7 @@ echo "Web build copied to $DEST"
 IMAGES="$ROOT/android/app/src/main/res/drawable-nodpi"
 rm -rf "$IMAGES"
 mkdir -p "$IMAGES"
-for image in "$ROOT/src/assets"/*.jpg; do
+for image in "$ROOT/apps/web/src/assets"/*.jpg; do
   name="$(basename "$image" .jpg | tr '-' '_')"
   cp "$image" "$IMAGES/img_$name.jpg"
 done

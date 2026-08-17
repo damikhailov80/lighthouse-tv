@@ -1,5 +1,4 @@
-import type { Activity } from "../domain/types";
-import { heroOf, layoutOf, sectionsOf, type DayLayout } from "../domain/sections";
+import { type Activity, heroOf, layoutOf, sectionsOf, type DayLayout } from "@lighthouse/shared";
 import { ActivityRow } from "./ActivityRow";
 import { Hero } from "./Hero";
 import { Logo } from "./Logo";

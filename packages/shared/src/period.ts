@@ -1,4 +1,4 @@
-import type { PeriodUnit } from "./types";
+import type { PeriodUnit } from "./types.js";
 
 // Approximate day-length of each unit. A month is treated as 30 days, which is
 // precise enough for a status dashboard.

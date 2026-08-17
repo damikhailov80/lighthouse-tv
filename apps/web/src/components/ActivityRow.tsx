@@ -1,4 +1,4 @@
-import type { Activity } from "../domain/types";
+import { type Activity } from "@lighthouse/shared";
 import { ActivityCard } from "./ActivityCard";
 import styles from "./ActivityRow.module.css";
 

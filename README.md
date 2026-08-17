@@ -22,11 +22,16 @@ design tokens, image keys, storage versioning — are in [CLAUDE.md](CLAUDE.md).
 ## Develop
 
 ```bash
-npm install
+npm install       # npm workspaces: apps/web, apps/api, packages/shared
 npm run dev       # http://localhost:5173
-npm run build     # tsc --noEmit && vite build -> dist/
+npm run build     # packages/shared, then apps/web -> apps/web/dist/
 npm run preview   # serve the production build
 ```
+
+`packages/shared` is built twice from one source — CommonJS for NestJS, ESM for the
+bundler — so `npm run build` from the root always builds it before the app that
+consumes it. On a long editing session run `npm -w @lighthouse/shared run dev`
+alongside `npm run dev` to keep its output current.
 
 **Design and test at 1280x720** — see "The TV viewport is not 1920px" below.
 
@@ -127,7 +132,8 @@ refusal is cleared out with the card it was about.
   has already decided on and written the labels for. Kotlin only copies them into the TV
   provider.
 - **The illustrations go into the APK a second time.** The launcher cannot read the
-  base64 the single-file build inlines either, so `sync-web.sh` copies `src/assets/*.jpg`
+  base64 the single-file build inlines either, so `sync-web.sh` copies
+  `apps/web/src/assets/*.jpg`
   into `res/drawable-nodpi/img_*.jpg` and the cards point at `android.resource://` URIs.
   Those copies are generated and gitignored; the originals stay the only copy in git.
 - **The viewer decides whether our channel appears.** `TvContract.requestChannelBrowsable`
@@ -184,11 +190,13 @@ when the rows are there — the shell is not us. Look at the launcher instead.
 ## Layout
 
 ```
-src/
+packages/shared/src/  the domain, imported by both the web app and the API:
+                      types, period, status, format, sections (the day's rows),
+                      recommendations (what the home screen offers), seed
+apps/web/src/
   main.tsx            mounts App, dismisses the boot screen
   App.tsx             routing, history, persistence, the day's picks
-  domain/             types, period, status, format, sections (the day's rows), route,
-                      recommendations (what the home screen offers), seed
+  domain/route.ts     hash routing — the one piece of the domain that is web-only
   services/storage.ts the only place localStorage is touched
   services/channel.ts the only place the native bridge is touched
   hooks/              useSpatialNavigation (D-pad)
@@ -196,6 +204,7 @@ src/
                       EditActivityDialog, Logo
   assets/             web copies of the illustrations + the key -> asset map
   styles/             tokens.css, global.css, shared Button/status modules
+assets/               the full-size PNG originals, not shipped
 android/
   app/src/main/java/com/lighthouse/tv/
     MainActivity.kt   fullscreen WebView, immersive bars, BACK walks web history,
@@ -224,7 +233,7 @@ copy.
   WebView. It is also why illustrations are kept small (720px JPEG) and why a second
   entry point would mean a second copy of everything.
 - **The repeat period is `every` + `unit`** (day/week/month), not a raw day count;
-  `src/domain/period.ts` converts it to days. Shown as "daily" / "every 3d" / "weekly".
+  `packages/shared/src/period.ts` converts it to days. Shown as "daily" / "every 3d" / "weekly".
 - **Status is a pure function of `(activity, now)`**, and its thresholds are a *fraction
   of the interval* (`>0.5` green, `>0.2` yellow, else orange; overdue is red), so they
   mean the same thing on a 3-day and a 6-month period.

@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    // CommonJS, for NestJS. The ESM twin is built by tsconfig.esm.json — see
+    // the note in package.json for why both are needed.
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    // No DOM: everything here has to give the same answer on a television, in
+    // a browser and on the server, so reaching for `document` or `localStorage`
+    // should fail to compile rather than fail at runtime on the API.
+    "lib": ["ES2022"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist/cjs",
+    "rootDir": "src",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}

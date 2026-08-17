@@ -1,7 +1,11 @@
-import type { Activity } from "../domain/types";
-import type { DayLayout } from "../domain/sections";
-import { recommendedActivities, watchNextActivity } from "../domain/recommendations";
-import { dueLabel, periodShort } from "../domain/format";
+import {
+  type Activity,
+  type DayLayout,
+  recommendedActivities,
+  watchNextActivity,
+  dueLabel,
+  periodShort,
+} from "@lighthouse/shared";
 
 // One card on the home screen, as the native side wants it: finished text, and
 // an image key rather than a URL. Every decision about what to offer is taken

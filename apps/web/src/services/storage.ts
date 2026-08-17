@@ -1,5 +1,4 @@
-import type { Activity } from "../domain/types";
-import type { DayLayout } from "../domain/sections";
+import { type Activity, type DayLayout } from "@lighthouse/shared";
 
 // Bumped when stored records are no longer worth keeping. Reading a new key
 // makes the app fall back to the seed, which is how the illustrated activities

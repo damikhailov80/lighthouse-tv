@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import type { Activity } from "./domain/types";
+import {
+  type Activity,
+  remainingRatio,
+  dayKey,
+  heroOf,
+  layoutOf,
+  type DayLayout,
+  seedActivities,
+} from "@lighthouse/shared";
 import {
   loadActivities,
   loadDayLayout,
@@ -9,9 +17,6 @@ import {
   saveHeroPick,
 } from "./services/storage";
 import { publishChannel } from "./services/channel";
-import { remainingRatio } from "./domain/status";
-import { dayKey, heroOf, layoutOf, type DayLayout } from "./domain/sections";
-import { seedActivities } from "./domain/seed";
 import { Dashboard } from "./components/Dashboard";
 import { ActivityDetail } from "./components/ActivityDetail";
 import { EditActivityDialog, type ActivityDraft } from "./components/EditActivityDialog";

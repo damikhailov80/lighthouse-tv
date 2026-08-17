@@ -1,6 +1,6 @@
-import type { Activity } from "./types";
-import { doneToday, remainingRatio, statusOf } from "./status";
-import { SUGGESTED_ROW, shuffleKey, type DayLayout } from "./sections";
+import type { Activity } from "./types.js";
+import { doneToday, remainingRatio, statusOf } from "./status.js";
+import { SUGGESTED_ROW, shuffleKey, type DayLayout } from "./sections.js";
 
 // How many cards the home-screen channel carries. A launcher row shows about
 // this many before it has to be scrolled, so a longer list would only be

@@ -1,0 +1,22 @@
+{
+  "name": "@lighthouse/shared",
+  "version": "0.0.0",
+  "private": true,
+  "types": "./dist/cjs/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json && node scripts/stamp-module-type.mjs",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

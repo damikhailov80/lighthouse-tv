@@ -1,4 +1,4 @@
-import type { ActivityImage } from "../domain/types";
+import { type ActivityImage } from "@lighthouse/shared";
 import boardGames from "./board-games.jpg";
 import callParents from "./call-parents.jpg";
 import cycling from "./cycling.jpg";

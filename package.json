@@ -1,12 +1,12 @@
 {
-  "name": "lighthouse-tv",
+  "name": "lighthouse",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
+    "dev": "npm -w @lighthouse/web run dev",
+    "build": "npm -w @lighthouse/shared run build && npm -w @lighthouse/web run build",
+    "preview": "npm -w @lighthouse/web run preview",
     "tv:build": "bash android/sync-web.sh && cd android && ./gradlew assembleDebug",
     "tv:connect": "adb connect ${TV_IP:-192.168.1.11}:5555 | tee /dev/stderr | grep -q 'connected to'",
     "tv:upload": "bash android/adb-tv.sh install -r android/app/build/outputs/apk/debug/app-debug.apk",
@@ -24,17 +24,5 @@
     "emu:reboot": "bash android/emulator.sh --reboot",
     "emu:deploy": "npm run emu:start && npm run emu:uninstall && npm run tv:build && npm run emu:install && npm run emu:run",
     "emu:logs": "bash android/adb-emu.sh logcat -s chromium:E chromium:W AndroidRuntime:E"
-  },
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.7.0",
-    "vite": "^6.0.0",
-    "vite-plugin-singlefile": "^2.3.3"
   }
 }

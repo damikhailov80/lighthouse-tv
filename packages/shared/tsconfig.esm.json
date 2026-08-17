@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ES2022",
+    "outDir": "dist/esm",
+    // The .d.ts files come from the CommonJS build; emitting them twice only
+    // gives two copies of the same thing for the exports map to disagree about.
+    "declaration": false,
+    "declarationMap": false
+  }
+}

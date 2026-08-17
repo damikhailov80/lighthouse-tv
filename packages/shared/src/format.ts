@@ -1,5 +1,5 @@
-import type { Activity } from "./types";
-import { daysUntilDue } from "./status";
+import type { Activity } from "./types.js";
+import { daysUntilDue } from "./status.js";
 
 // Compact remaining-time label: "Overdue" / "Due today" / "3d left".
 export function dueLabel(activity: Activity, now: Date = new Date()): string {

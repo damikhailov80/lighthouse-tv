@@ -1,5 +1,5 @@
-import type { Activity, ActivityStatus } from "./types";
-import { doneToday, remainingRatio, statusOf } from "./status";
+import type { Activity, ActivityStatus } from "./types.js";
+import { doneToday, remainingRatio, statusOf } from "./status.js";
 
 // One row of the dashboard carousel.
 export interface ActivitySection {
