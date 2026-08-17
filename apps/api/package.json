@@ -11,9 +11,6 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },
-  "prisma": {
-    "schema": "prisma/schema.prisma"
-  },
   "dependencies": {
     "@lighthouse/shared": "*",
     "@nestjs/common": "^11.0.0",

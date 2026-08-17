@@ -17,7 +17,9 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
-    "incremental": true,
+    // Not incremental: nest-cli deletes dist/ before each build, and a
+    // tsbuildinfo left behind would convince tsc the outputs it just lost are
+    // still there — a watch run that reports "0 errors" and emits nothing.
     "skipLibCheck": true
   },
   "include": ["src"]
