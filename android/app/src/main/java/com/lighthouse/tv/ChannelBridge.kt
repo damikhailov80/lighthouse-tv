@@ -13,10 +13,6 @@ const val CHANNEL_BRIDGE_NAME = "LighthouseChannel"
 // dashboard hands over the cards it has decided on, and they go to the TV
 // provider. Everything upstream of this — which activities, in what order, with
 // what labels — stays in React, where the data lives.
-//
-// Installed on the dashboard's web view only. The screensaver's does not get
-// one: it is read-only by design, and a television nobody is watching has no
-// business rearranging the home screen.
 class ChannelBridge(private val context: Context) {
 
     // Called from JavaScript, which means: on a WebView thread, never the UI

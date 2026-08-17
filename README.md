@@ -16,8 +16,6 @@ design tokens, image keys, storage versioning — are in [CLAUDE.md](CLAUDE.md).
   The banner's pick and the rows are dealt once a day and then held: marking something
   done turns its card green where it stands instead of rearranging the screen.
 - **Activity page** — details, mark as done, edit.
-- **Screensaver** — the same bundle on the `#/ambient` route, shown when the TV goes
-  idle. See below.
 - **Home screen** — a row of five cards in the TV launcher, plus one card in the
   television's own "Play Next", outside the app entirely. See below.
 
@@ -29,9 +27,6 @@ npm run dev       # http://localhost:5173
 npm run build     # tsc --noEmit && vite build -> dist/
 npm run preview   # serve the production build
 ```
-
-The screensaver is a route, so it is debuggable without a television:
-**http://localhost:5173/#/ambient**.
 
 **Design and test at 1280x720** — see "The TV viewport is not 1920px" below.
 
@@ -72,41 +67,6 @@ The Gradle wrapper picks up `java` from PATH; **JDK 17** is required.
      *random* port: `adb pair <ip>:<pair-port>` first, then connect to the *other* port
      shown on the Wireless debugging screen.
 3. `npm run tv:deploy`.
-
-## The screensaver
-
-Android TV has no home-screen widgets, so an idle screen is where the day's activity can
-be shown without anyone pressing anything. It is a `DreamService` (`AmbientDream.kt`)
-hosting the same web bundle on `#/ambient` — one app means one WebView data directory,
-so it reads the very same `localStorage` the dashboard writes, with nothing mirrored to
-the native side. It is read-only: it shows the pick the dashboard already made rather
-than making one of its own.
-
-Enable it after installing the APK — on the TV: **Settings → Device preferences →
-Screen saver**, pick **"Lighthouse — today"**, and set when it starts.
-
-Google TV replaces that screen with its own Ambient mode and may not offer third-party
-screensavers at all. Then set it over adb:
-
-```bash
-adb shell settings put secure screensaver_components com.lighthouse.tv/.AmbientDream
-adb shell settings put secure screensaver_enabled 1
-adb shell settings put secure screensaver_activate_on_sleep 1
-```
-
-Start it immediately instead of waiting for the TV to go idle:
-
-```bash
-adb shell am start -n com.android.systemui/.Somnambulator
-```
-
-**OK opens the dashboard**; any other button just leaves the screensaver, which is what a
-screensaver is expected to do. That is the only reason the dream is declared interactive
-— a non-interactive one is dismissed by the system before it ever sees the press — and
-every event is handled in `AmbientDream`, so none of them reaches the page.
-
-Until the app has been opened once on that TV there is nothing in storage, so the
-screensaver shows the seeded activities.
 
 ## The home screen
 
@@ -163,9 +123,9 @@ refusal is cleared out with the card it was about.
 ### How both are wired
 
 - **`localStorage` cannot be read by the launcher**, which is a separate process. So the
-  dashboard's web view — and only that one, never the screensaver's — is given a
-  `ChannelBridge` JavaScript interface, and hands over cards it has already decided on
-  and written the labels for. Kotlin only copies them into the TV provider.
+  app's web view is given a `ChannelBridge` JavaScript interface, and hands over cards it
+  has already decided on and written the labels for. Kotlin only copies them into the TV
+  provider.
 - **The illustrations go into the APK a second time.** The launcher cannot read the
   base64 the single-file build inlines either, so `sync-web.sh` copies `src/assets/*.jpg`
   into `res/drawable-nodpi/img_*.jpg` and the cards point at `android.resource://` URIs.
@@ -225,7 +185,7 @@ when the rows are there — the shell is not us. Look at the launcher instead.
 
 ```
 src/
-  main.tsx            picks the mode: #/ambient -> Ambient, everything else -> App
+  main.tsx            mounts App, dismisses the boot screen
   App.tsx             routing, history, persistence, the day's picks
   domain/             types, period, status, format, sections (the day's rows), route,
                       recommendations (what the home screen offers), seed
@@ -233,15 +193,14 @@ src/
   services/channel.ts the only place the native bridge is touched
   hooks/              useSpatialNavigation (D-pad)
   components/         Dashboard, Hero, ActivityRow, ActivityCard, ActivityDetail,
-                      EditActivityDialog, Ambient, Logo
+                      EditActivityDialog, Logo
   assets/             web copies of the illustrations + the key -> asset map
   styles/             tokens.css, global.css, shared Button/status modules
 android/
   app/src/main/java/com/lighthouse/tv/
     MainActivity.kt   fullscreen WebView, immersive bars, BACK walks web history,
                       lighthouse://activity/<id> deep links
-    AmbientDream.kt   the screensaver
-    AppWebView.kt     the WebView both of them are built from
+    AppWebView.kt     the WebView it is built from
     ChannelBridge.kt  the one crossing from the web layer to the native side
     ChannelCard.kt    what a card is, and how it finds its picture and its link
     RecommendationChannel.kt  our own channel of five, written to the TV provider

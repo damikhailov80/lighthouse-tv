@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Lighthouse</string>
-    <!-- How the screensaver is listed in the TV's Screen saver settings. -->
-    <string name="dream_name">Lighthouse — today</string>
     <!-- The heading over our row of cards on the Google TV home screen. -->
     <string name="channel_name">Time to do</string>
 </resources>

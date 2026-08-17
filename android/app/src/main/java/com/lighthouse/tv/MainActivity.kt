@@ -15,9 +15,6 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // The bridge goes on this web view and not on the screensaver's: the
-        // dashboard is the screen that owns the list, so it is the one allowed
-        // to say what the home screen offers.
         webView = appWebView(this, routeOf(intent), ChannelBridge(applicationContext))
         setContentView(webView)
         webView.requestFocus()
@@ -34,8 +31,8 @@ class MainActivity : Activity() {
     }
 
     // Turns lighthouse://activity/<id> into the hash the web app already
-    // understands. Anything else — the launcher icon, the screensaver, the
-    // channel's own heading — opens the dashboard.
+    // understands. Anything else — the launcher icon, the channel's own
+    // heading — opens the dashboard.
     private fun routeOf(intent: Intent?): String {
         val uri = intent?.takeIf { it.action == Intent.ACTION_VIEW }?.data ?: return ""
         if (uri.scheme != DEEP_LINK_SCHEME || uri.host != DEEP_LINK_HOST) return ""

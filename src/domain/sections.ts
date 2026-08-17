@@ -40,9 +40,8 @@ const MIN_ROW_SIZE = 4;
 const SUGGESTION_COUNT = 3;
 
 // The id of the suggestions row. Named rather than spelled out at each use: the
-// screensaver and the home screen's Watch Next card both go looking for this
-// row in a stored layout, and a typo in either would only show up as a quietly
-// missing line.
+// home screen's Watch Next card goes looking for this row in a stored layout,
+// and a typo would only show up as a quietly missing card.
 export const SUGGESTED_ROW = "suggested";
 
 // Most urgent first (overdue at the front, greenest at the back).

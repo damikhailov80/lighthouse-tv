@@ -7,14 +7,10 @@ import android.webkit.WebView
 // The single-page build shipped inside the APK.
 const val APP_URL = "file:///android_asset/www/index.html"
 
-// The web view both screens are built from: the dashboard activity and the
-// screensaver. They differ only in the route they open and in whether they can
-// write to the home-screen channel — the bundle, the settings and the storage
-// are the same, since one app has one WebView data directory, which is why the
-// screensaver can read the picks the dashboard wrote without any of it being
-// mirrored to the native side.
+// The web view the app is built from. MainActivity is its only caller: the
+// bundle, the settings and the storage all belong to the one screen there is.
 @SuppressLint("SetJavaScriptEnabled")
-fun appWebView(context: Context, route: String = "", bridge: ChannelBridge? = null): WebView =
+fun appWebView(context: Context, route: String, bridge: ChannelBridge): WebView =
     WebView(context).apply {
         // A web view paints white until the page has its first frame, so it
         // starts on the same colour as everything else in the launch: the
@@ -30,9 +26,6 @@ fun appWebView(context: Context, route: String = "", bridge: ChannelBridge? = nu
         settings.loadWithOverviewMode = true
         isFocusable = true
         isFocusableInTouchMode = true
-        // Only the dashboard gets one. The screensaver is passed nothing, so
-        // window.LighthouseChannel is simply undefined there and the page's
-        // publish call goes nowhere — the same as it does in a browser.
-        bridge?.let { addJavascriptInterface(it, CHANNEL_BRIDGE_NAME) }
+        addJavascriptInterface(bridge, CHANNEL_BRIDGE_NAME)
         loadUrl(APP_URL + route)
     }

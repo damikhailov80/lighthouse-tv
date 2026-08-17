@@ -21,9 +21,8 @@ export interface ChannelCard {
   image?: string;
 }
 
-// Installed on window by MainActivity, and only there. Absent in a browser and
-// absent in the screensaver's web view, which is read-only by design: a
-// television nobody is watching should not be redealing the home screen.
+// Installed on window by MainActivity, and only there — absent in a browser,
+// where there is no home screen to publish to.
 declare global {
   interface Window {
     LighthouseChannel?: { publish(json: string): void };
