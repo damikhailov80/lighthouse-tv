@@ -1,25 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  type Activity,
-  remainingRatio,
-  dayKey,
-  heroOf,
-  layoutOf,
-  type DayLayout,
-  seedActivities,
-} from "@lighthouse/shared";
-import {
-  loadActivities,
-  loadDayLayout,
-  loadHeroPick,
-  saveActivities,
-  saveDayLayout,
-  saveHeroPick,
-} from "./services/storage";
+import { type Activity, type DayLayout, remainingRatio } from "@lighthouse/shared";
 import { publishChannel } from "./services/channel";
 import { Dashboard } from "./components/Dashboard";
 import { ActivityDetail } from "./components/ActivityDetail";
 import { EditActivityDialog, type ActivityDraft } from "./components/EditActivityDialog";
+import { useActivities } from "./hooks/useActivities";
 import { useSpatialNavigation } from "./hooks/useSpatialNavigation";
 import { DASHBOARD, activityIdOf, depthOf, hashFor, parseHash, type Route } from "./domain/route";
 
@@ -44,15 +29,17 @@ function focusedSeat(): { row: string; index: number } | null {
 }
 
 export function App() {
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const { activities, today, loaded, error, markDone, save, remove } = useActivities();
   // The URL drives the UI, so a hash typed into the address bar opens the same
   // screen the in-app navigation would.
   const [route, setRoute] = useState<Route>(() => parseHash(location.hash));
-  const [loaded, setLoaded] = useState(false);
-  // The activity the banner is showing today. Null until the pick is made.
-  const [heroId, setHeroId] = useState<string | null>(null);
-  // The rows the dashboard is showing today. Null until they are dealt.
-  const [layout, setLayout] = useState<DayLayout | null>(null);
+  // The day's decisions, as the server made them. They used to be taken here,
+  // once a day, and kept in localStorage; they moved to the server so that the
+  // television, the web and anything else in the house feature the same
+  // activity rather than each dealing its own.
+  const heroId = today?.hero?.id ?? null;
+  const layout: DayLayout | null =
+    today === null ? null : { day: today.day, rows: today.rows };
   const didInitialFocus = useRef(false);
   // Where the card we opened sat: which row, and how far along it. The seat is
   // remembered instead of the card itself because marking an activity done
@@ -63,10 +50,6 @@ export function App() {
   useSpatialNavigation();
 
   useEffect(() => {
-    const stored = loadActivities();
-    setActivities(stored.length > 0 ? stored : seedActivities());
-    setLoaded(true);
-
     // A deep link arrives as a single history entry, so BACK would leave the
     // app. Rebuild the stack underneath it: dashboard, then the activity page,
     // then the dialog — exactly what opening it by hand would have produced.
@@ -84,9 +67,10 @@ export function App() {
   }, []);
 
   // Keep the URL honest about what is on screen. A link can name an activity
-  // that no longer exists (deleted, or storage wiped by a version bump), and a
-  // hand-typed hash can be unparseable — both land on the dashboard, so the
-  // address bar has to say so too.
+  // that no longer exists — a card on the home screen outlives the activity it
+  // was about, and another device may have deleted it since — and a hand-typed
+  // hash can be unparseable. Both land on the dashboard, so the address bar has
+  // to say so too.
   useEffect(() => {
     if (!loaded) return;
     const id = activityIdOf(route);
@@ -98,62 +82,16 @@ export function App() {
     }
   }, [loaded, route, activities]);
 
-  // Pick the banner's activity once a day and then hold it, the way the
-  // suggestions are held: marking it done should turn it green in place, not
-  // replace it with the next activity while the remote is still on the button.
-  // Re-picked when the day rolls over, or when the pinned activity is deleted.
+  // Keep the home screen in step with the list. The cards arrive finished from
+  // the server, so this is now only the moment they are handed across: whenever
+  // a new answer replaces the old one, which is on launch, after every change to
+  // an activity, and on the refresh timer — exactly the set of events the home
+  // screen cares about, since a card offering something that was finished an
+  // hour ago is the one thing a recommendation row must never do.
   useEffect(() => {
-    if (activities.length === 0) return;
-    const today = dayKey();
-    const stored = loadHeroPick();
-    if (stored?.day === today && activities.some((a) => a.id === stored.id)) {
-      setHeroId(stored.id);
-      return;
-    }
-    const picked = heroOf(activities)?.id;
-    if (!picked) return;
-    saveHeroPick({ day: today, id: picked });
-    setHeroId(picked);
-  }, [activities]);
-
-  // Deal the dashboard's rows once a day and then hold them. Marking an activity
-  // done must not rearrange the screen: the card stays in the row it was dealt
-  // into and only changes colour, and a row that was worth a heading this
-  // morning keeps it even after everything in it has been finished. Re-dealt
-  // when the day rolls over.
-  // Waits for the banner's pick: the suggestions are dealt around it, so dealing
-  // them first would offer the activity the banner is already showing.
-  useEffect(() => {
-    if (activities.length === 0 || heroId === null) return;
-    const today = dayKey();
-    if (layout?.day === today) return;
-
-    const stored = loadDayLayout();
-    if (stored?.day === today) {
-      setLayout(stored);
-      return;
-    }
-    const dealt = layoutOf(activities, undefined, heroId);
-    saveDayLayout(dealt);
-    setLayout(dealt);
-  }, [activities, layout, heroId]);
-
-  // Keep the home screen in step with the list: republished on launch and after
-  // every change to an activity. Hung on `activities` rather than on the
-  // individual handlers because commit() replaces it on every mark-done, save
-  // and delete, which is exactly the set of events the home screen cares
-  // about — a card offering something that was finished an hour ago is the one
-  // thing a recommendation row must never do.
-  //
-  // Held back until the day's rows are dealt, since the Watch Next card comes
-  // out of them: publishing first would take that card down and put it straight
-  // back a moment later, which on that row costs it its place. An empty list
-  // never gets a layout, and is published as it is — the home screen has to be
-  // emptied too when the last activity goes.
-  useEffect(() => {
-    if (!loaded || (activities.length > 0 && layout === null)) return;
-    publishChannel(activities, layout, heroId);
-  }, [loaded, activities, layout, heroId]);
+    if (!loaded) return;
+    publishChannel(today);
+  }, [loaded, today]);
 
   // Give the D-pad a starting point by focusing the banner once the dashboard
   // has rendered its activities — it already features the most urgent one.
@@ -257,57 +195,26 @@ export function App() {
     navigate({ kind: "edit", id: target === "new" ? null : target.id });
   };
 
-  // Persist and update state in one place so storage never drifts from UI.
-  const commit = (next: Activity[]) => {
-    saveActivities(next);
-    setActivities(next);
-  };
-
-  // Mark an activity done: reset its timer to now. Where to go afterwards is up
-  // to the caller — the activity page leaves for the dashboard, the banner is
-  // already there and just watches its own activity turn green.
-  const markDone = (id: string) => {
-    commit(
-      activities.map((activity) =>
-        activity.id === id
-          ? { ...activity, lastDoneAt: new Date().toISOString() }
-          : activity,
-      ),
-    );
-  };
-
-  // Create a new activity or update an existing one from the dialog.
+  // Create a new activity or update an existing one from the dialog. The id is
+  // generated here rather than by the server, which is what lets a request
+  // retried after an unclear failure land on the row it already made.
+  //
+  // The screen is left before the request settles: waiting would hold the
+  // dialog open on a spinner for a round trip, and the list the dashboard
+  // renders is updated the moment the answer arrives either way.
   const saveActivity = (draft: ActivityDraft) => {
-    if (draft.id) {
-      commit(
-        activities.map((activity) =>
-          activity.id === draft.id
-            ? {
-                ...activity,
-                title: draft.title,
-                every: draft.every,
-                unit: draft.unit,
-                image: draft.image,
-              }
-            : activity,
-        ),
-      );
-    } else {
-      const created: Activity = {
-        id: crypto.randomUUID(),
-        title: draft.title,
-        every: draft.every,
-        unit: draft.unit,
-        image: draft.image,
-        lastDoneAt: new Date().toISOString(),
-      };
-      commit([...activities, created]);
-    }
+    void save({
+      id: draft.id ?? crypto.randomUUID(),
+      title: draft.title,
+      every: draft.every,
+      unit: draft.unit,
+      image: draft.image,
+    });
     history.back();
   };
 
   const deleteActivity = (id: string) => {
-    commit(activities.filter((activity) => activity.id !== id));
+    void remove(id);
     // Leave both the dialog and the now-gone activity's page behind. Delete is
     // only offered for an existing activity, so both entries are always there.
     history.go(-depthOf({ kind: "edit", id }));
@@ -315,6 +222,22 @@ export function App() {
 
   // Most urgent first (overdue at the top, greenest at the bottom).
   const sorted = [...activities].sort((a, b) => remainingRatio(a) - remainingRatio(b));
+
+  // What to say when the screen has no cards to show. A dashboard that is
+  // simply empty cannot tell "nothing added yet" from "the server is not
+  // answering", and on a television those need different things done about
+  // them. Once there are cached activities to draw, a failed refresh is left
+  // unsaid: the list on screen is a few minutes old at worst.
+  const notice =
+    activities.length > 0
+      ? undefined
+      : !loaded
+        ? "Loading…"
+        : error === null
+          ? undefined
+          : error.isUnauthorized
+            ? "This device is not allowed to read the list. Check its token."
+            : "Cannot reach the server. Showing nothing until it answers.";
 
   return (
     <>
@@ -325,7 +248,7 @@ export function App() {
           <ActivityDetail
             activity={selected}
             onMarkDone={(id) => {
-              markDone(id);
+              void markDone(id);
               history.back();
             }}
             onEdit={openEdit}
@@ -336,9 +259,10 @@ export function App() {
             activities={sorted}
             heroId={heroId}
             layout={layout}
+            notice={notice}
             onOpen={openDetail}
             onAdd={() => openEdit("new")}
-            onMarkDone={markDone}
+            onMarkDone={(id) => void markDone(id)}
             onEdit={openEdit}
           />
         )}

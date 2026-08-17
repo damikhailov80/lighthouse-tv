@@ -8,12 +8,13 @@ import {
   recommendedActivities,
   watchNextActivity,
   type Activity,
+  type ChannelCard,
   type DayLayout,
+  type Today,
 } from "@lighthouse/shared";
 import { ActivitiesService } from "../activities/activities.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { TenantContext } from "../tenant/tenant.context";
-import type { ChannelCard, Today } from "./today.types";
 
 function cardFor(activity: Activity, now: Date): ChannelCard {
   return {

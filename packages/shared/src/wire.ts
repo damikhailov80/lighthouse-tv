@@ -1,8 +1,12 @@
-import type { Activity, DayLayout } from "@lighthouse/shared";
+import type { Activity } from "./types.js";
+import type { DayLayout } from "./sections.js";
+
+// What the API answers with, described once for everything that speaks to it:
+// the API, the web app, the television, and whatever renders an activity next.
 
 // One card as a home screen or a photo frame wants it: finished text, and an
-// image key rather than a URL. Same shape the native side has always been
-// handed — it moved here when the decision behind it moved to the server.
+// image key rather than a URL — the launcher runs in another process and looks
+// the key up in its own copy of the pictures.
 export interface ChannelCard {
   id: string;
   title: string;
@@ -15,10 +19,11 @@ export interface ChannelCard {
 //
 // It exists so that a client with no keyboard and no reason to hold the whole
 // domain — a photo frame whose entire content is the day's pick — can render
-// from a single request. The dashboard uses the same answer, which is what
+// from a single request. The dashboard reads the same answer, which is what
 // makes the two agree.
 export interface Today {
-  // dayKey(), resolved in the household's timezone.
+  // dayKey(), resolved in the household's timezone. The server decides it, so
+  // devices in the same house cannot disagree about what day it is.
   day: string;
   // The banner's activity. Null only when there are no activities at all.
   hero: Activity | null;

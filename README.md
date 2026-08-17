@@ -4,11 +4,19 @@ A home dashboard for **Android TV**: a big-screen list of recurring activities w
 traffic-light status (🟢 → 🟡 → 🟠 → 🔴), driven by the TV remote (D-pad + OK). It answers
 one question from across the room — *what has been left too long?*
 
-Local storage only, no backend.
+One list, several screens. A **NestJS + PostgreSQL** API owns the activities *and the
+day's decisions* — which activity the banner features, which rows the dashboard deals —
+so the television, a browser and anything else in the house name the same thing rather
+than each dealing its own. Clients keep a read cache in `localStorage`, which is what
+draws the first frame and what survives a moment of bad Wi-Fi.
 
-All logic and state live in **React**; Android is a thin fullscreen WebView shell that
-loads the built app from its `assets`. Conventions for the code itself — CSS Modules,
-design tokens, image keys, storage versioning — are in [CLAUDE.md](CLAUDE.md).
+There is no sign-in yet: one household, one list, and every client presents the same
+build-time token. The seam real authentication will take is already in place — see
+`AuthGuard` and `TenantContext`.
+
+Android is a thin fullscreen WebView shell that loads the built app from its `assets`.
+Conventions for the code itself — CSS Modules, design tokens, image keys, the workspace
+layout — are in [CLAUDE.md](CLAUDE.md).
 
 ## Screens
 
@@ -22,16 +30,24 @@ design tokens, image keys, storage versioning — are in [CLAUDE.md](CLAUDE.md).
 ## Develop
 
 ```bash
-npm install       # npm workspaces: apps/web, apps/api, packages/shared
-npm run dev       # http://localhost:5173
-npm run build     # packages/shared, then apps/web -> apps/web/dist/
-npm run preview   # serve the production build
+npm install               # npm workspaces: apps/web, apps/api, packages/shared
+cp .env.example .env      # set DEVICE_TOKEN and HOUSEHOLD_TZ
+
+npm run db:up             # PostgreSQL in Docker, waits for the healthcheck
+npm run db:migrate        # apply migrations
+npm run db:seed           # the nine sample activities
+
+npm run dev:all           # database + shared watcher + API + Vite
 ```
 
+Or piecemeal: `npm run api:dev` (NestJS on `0.0.0.0:3000`), `npm run dev` (Vite on
+`http://localhost:5173`), `npm run db:studio` (browse the database), `npm run build`
+(shared, then the web bundle).
+
 `packages/shared` is built twice from one source — CommonJS for NestJS, ESM for the
-bundler — so `npm run build` from the root always builds it before the app that
-consumes it. On a long editing session run `npm -w @lighthouse/shared run dev`
-alongside `npm run dev` to keep its output current.
+bundler — so anything that consumes it builds it first. `dev:all` runs its watcher for
+you; if you start the pieces separately, run `npm -w @lighthouse/shared run dev`
+alongside them or edits there will be invisible.
 
 **Design and test at 1280x720** — see "The TV viewport is not 1920px" below.
 
@@ -44,6 +60,25 @@ alongside `npm run dev` to keep its output current.
 | `npm run tv:upload` | Install/replace the APK on the connected TV |
 | `npm run tv:run` | Launch the app on the TV |
 | **`npm run tv:deploy`** | All of it: connect → build → upload → run |
+
+**The API address and the device token are baked into the APK**, because the only input
+device a television has is a D-pad and a settings screen would mean typing a URL with it.
+Both come from the build environment:
+
+```bash
+LIGHTHOUSE_API_URL=https://lighthouse.example.com \
+LIGHTHOUSE_DEVICE_TOKEN=<the DEVICE_TOKEN from .env> \
+  npm run tv:deploy
+```
+
+Unset, they default to `http://10.0.2.2:3000` — the emulator's route to the host
+machine — and an empty token, so an emulator build works against `npm run api:dev` with
+nothing set, and a television build that forgets them gets 401s and says so on screen
+rather than quietly talking to the wrong server. Changing either means rebuilding the
+APK.
+
+Plain HTTP is only permitted for the emulator and localhost
+(`res/xml/network_security_config.xml`); a deployed API is expected on HTTPS.
 
 Helpers: `npm run tv:devices` (confirm the TV shows as `device`), `npm run tv:logs`
 (logcat filtered to WebView JS errors and crashes).
@@ -127,10 +162,11 @@ refusal is cleared out with the card it was about.
 
 ### How both are wired
 
-- **`localStorage` cannot be read by the launcher**, which is a separate process. So the
-  app's web view is given a `ChannelBridge` JavaScript interface, and hands over cards it
-  has already decided on and written the labels for. Kotlin only copies them into the TV
-  provider.
+- **The launcher is a separate process** and cannot reach the app's data. So the app's web
+  view is given a `ChannelBridge` JavaScript interface and hands cards across it. The
+  cards arrive from the API already decided on and with their labels written — `GET
+  /today` serves the same answer to every screen — so the web layer only carries them and
+  Kotlin only copies them into the TV provider.
 - **The illustrations go into the APK a second time.** The launcher cannot read the
   base64 the single-file build inlines either, so `sync-web.sh` copies
   `apps/web/src/assets/*.jpg`
@@ -192,12 +228,23 @@ when the rows are there — the shell is not us. Look at the launcher instead.
 ```
 packages/shared/src/  the domain, imported by both the web app and the API:
                       types, period, status, format, sections (the day's rows),
-                      recommendations (what the home screen offers), seed
+                      recommendations (what the home screen offers), seed,
+                      wire (what GET /today answers with)
+apps/api/src/
+  tenant/             AuthGuard and TenantContext — the seat authentication takes
+  activities/         CRUD; every mutation proves ownership first
+  today/              the day's pick, dealt once and stored per household
+  cleanup/            drops old tombstones and day picks on a schedule
+  prisma/             the one database connection
+apps/api/prisma/      schema, migrations, seed
 apps/web/src/
   main.tsx            mounts App, dismisses the boot screen
-  App.tsx             routing, history, persistence, the day's picks
+  App.tsx             routing, history, and what the screens are handed
   domain/route.ts     hash routing — the one piece of the domain that is web-only
-  services/storage.ts the only place localStorage is touched
+  hooks/useActivities the only way the UI reaches the data
+  services/api.ts     the only place the API is called
+  services/config.ts  where the API is and what to present to it
+  services/storage.ts the only place localStorage is touched — a read cache now
   services/channel.ts the only place the native bridge is touched
   hooks/              useSpatialNavigation (D-pad)
   components/         Dashboard, Hero, ActivityRow, ActivityCard, ActivityDetail,
@@ -211,6 +258,7 @@ android/
                       lighthouse://activity/<id> deep links
     AppWebView.kt     the WebView it is built from
     ChannelBridge.kt  the one crossing from the web layer to the native side
+    ConfigBridge.kt   hands the page the API address and the device token
     ChannelCard.kt    what a card is, and how it finds its picture and its link
     RecommendationChannel.kt  our own channel of five, written to the TV provider
     WatchNextRow.kt   the television's Play Next row, one card of ours in it

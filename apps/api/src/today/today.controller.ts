@@ -1,6 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 import { TodayService } from "./today.service";
-import type { Today } from "./today.types";
+import type { Today } from "@lighthouse/shared";
 
 @Controller("today")
 export class TodayController {

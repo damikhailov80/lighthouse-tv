@@ -33,3 +33,12 @@
   font-size: var(--font-size-2xl);
   letter-spacing: 0.01em;
 }
+
+/* Stands in for the whole screen when there are no cards: still loading, or the
+   server is not answering. Read from across a room, so it takes the body size
+   rather than a caption's. */
+.notice {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}

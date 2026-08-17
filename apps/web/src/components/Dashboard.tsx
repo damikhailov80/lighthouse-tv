@@ -11,6 +11,10 @@ interface DashboardProps {
   heroId: string | null;
   // The rows dealt for today; null falls back to dealing them on the spot.
   layout: DayLayout | null;
+  // Shown instead of the rows when there is nothing to show — the list is still
+  // loading, or the server cannot be reached. An empty screen on a television
+  // says nothing about which of those it is.
+  notice?: string;
   onOpen: (activity: Activity) => void;
   onAdd: () => void;
   // The banner acts on its activity in place, without opening its page.
@@ -22,6 +26,7 @@ export function Dashboard({
   activities,
   heroId,
   layout,
+  notice,
   onOpen,
   onAdd,
   onMarkDone,
@@ -45,6 +50,8 @@ export function Dashboard({
           Add activity
         </button>
       </header>
+
+      {notice !== undefined && <p className={styles.notice}>{notice}</p>}
 
       {hero && <Hero activity={hero} onMarkDone={onMarkDone} onEdit={onEdit} />}
 

@@ -1,71 +1,64 @@
-import { type Activity, type DayLayout } from "@lighthouse/shared";
+import type { Activity, Today } from "@lighthouse/shared";
 
-// Bumped when stored records are no longer worth keeping. Reading a new key
-// makes the app fall back to the seed, which is how the illustrated activities
-// replace the ones saved before pictures existed.
-const STORAGE_KEY = "lighthouse.activities.v2";
+// The read cache. The API is the only place data lives now; this is what the
+// screen draws while the first request is still in flight, and what it keeps
+// drawing when the Wi-Fi drops. Losing all of it costs one round trip.
+//
+// The activities key keeps its name and version. Bumping a version means
+// throwing the records away on purpose (see CLAUDE.md), and nothing is being
+// thrown away here — the same key simply stops being the source of truth and
+// becomes a copy of it.
+const ACTIVITIES_KEY = "lighthouse.activities.v2";
+const TODAY_KEY = "lighthouse.today.v1";
 
-// Keys of superseded formats. They are deleted on load so an old dataset can
-// never come back, and so the TV does not carry them around forever.
-const LEGACY_KEYS = ["lighthouse.activities"];
+// Keys of superseded formats, deleted on load so an old dataset can never come
+// back and the television does not carry it around forever. The banner's pick
+// and the dashboard's rows are among them now: they are decided by the server,
+// so that every screen in the house names the same activity, and a stale local
+// copy could only ever disagree with it.
+const LEGACY_KEYS = ["lighthouse.activities", "lighthouse.hero.v1", "lighthouse.layout.v1"];
 
-// Loads activities from localStorage. Returns an empty list if there is
-// nothing stored yet or the stored value is corrupted.
-export function loadActivities(): Activity[] {
-  for (const key of LEGACY_KEYS) localStorage.removeItem(key);
-
+function read<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as Activity[];
-  } catch {
-    return [];
-  }
-}
-
-export function saveActivities(activities: Activity[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-}
-
-// Which activity the banner settled on, and the day it was picked. Kept out of
-// the activities themselves: it is a decision about the screen, not about the
-// data, and it may be thrown away at any time without losing anything.
-const HERO_KEY = "lighthouse.hero.v1";
-
-export interface HeroPick {
-  day: string;
-  id: string;
-}
-
-export function loadHeroPick(): HeroPick | null {
-  try {
-    const raw = localStorage.getItem(HERO_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as HeroPick;
+    const raw = localStorage.getItem(key);
+    return raw === null ? null : (JSON.parse(raw) as T);
   } catch {
     return null;
   }
 }
 
-export function saveHeroPick(pick: HeroPick): void {
-  localStorage.setItem(HERO_KEY, JSON.stringify(pick));
-}
-
-// The rows the dashboard settled on, and the day they were dealt. Like the
-// banner's pick, this is a decision about the screen rather than about the data:
-// losing it costs nothing but a reshuffle.
-const LAYOUT_KEY = "lighthouse.layout.v1";
-
-export function loadDayLayout(): DayLayout | null {
+function write(key: string, value: unknown): void {
   try {
-    const raw = localStorage.getItem(LAYOUT_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as DayLayout;
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    return null;
+    // A full or disabled store costs the next launch its first frame and
+    // nothing else. It must not take down a screen that is otherwise working.
   }
 }
 
-export function saveDayLayout(layout: DayLayout): void {
-  localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+// Called once, before anything reads the cache.
+export function dropLegacyKeys(): void {
+  for (const key of LEGACY_KEYS) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Same reasoning as write(): not worth a broken screen.
+    }
+  }
+}
+
+export function loadCachedActivities(): Activity[] | null {
+  return read<Activity[]>(ACTIVITIES_KEY);
+}
+
+export function saveCachedActivities(activities: Activity[]): void {
+  write(ACTIVITIES_KEY, activities);
+}
+
+export function loadCachedToday(): Today | null {
+  return read<Today>(TODAY_KEY);
+}
+
+export function saveCachedToday(today: Today): void {
+  write(TODAY_KEY, today);
 }

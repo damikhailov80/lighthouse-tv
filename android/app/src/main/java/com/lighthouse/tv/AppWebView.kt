@@ -18,7 +18,9 @@ fun appWebView(context: Context, route: String, bridge: ChannelBridge): WebView 
         // index.html are all @color/night.
         setBackgroundColor(context.getColor(R.color.night))
         settings.javaScriptEnabled = true
-        // Enables localStorage, which the dashboard uses for persistence.
+        // Enables localStorage, which the app uses to cache the last list it
+        // was served so the first frame is not empty and a moment of bad Wi-Fi
+        // does not blank the screen.
         settings.domStorageEnabled = true
         // Honour the page's fixed <meta viewport width=1280> and scale it
         // to fill the TV panel instead of using the raw device width.
@@ -27,5 +29,6 @@ fun appWebView(context: Context, route: String, bridge: ChannelBridge): WebView 
         isFocusable = true
         isFocusableInTouchMode = true
         addJavascriptInterface(bridge, CHANNEL_BRIDGE_NAME)
+        addJavascriptInterface(ConfigBridge(), CONFIG_BRIDGE_NAME)
         loadUrl(APP_URL + route)
     }
